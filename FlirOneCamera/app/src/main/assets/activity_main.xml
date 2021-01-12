@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity"
+    android:orientation="vertical"
+    >
+        <ImageView
+            android:id="@+id/msx_image"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_above="@id/connect_flir_one"
+            android:contentDescription="@string/image_with_only_visual_image"
+            android:maxWidth="50dp"
+            android:minWidth="50dp"
+            />
+
+<!--        <com.otaliastudios.cameraview.CameraView-->
+<!--            android:id="@+id/cameraView"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_above="@id/connect_flir_one"-->
+<!--            app:cameraAudio="off"-->
+<!--            app:cameraFacing="back"-->
+<!--            />-->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:id="@+id/description"
+            android:text="@string/description_flir_camera"
+            android:textColor="@color/colorPrimary"
+            />
+        <com.samples.flironecamera.helpers.GraphicOverlay
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/graphic_overlay"
+            android:layout_above="@id/connect_flir_one"
+            />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/connect_flir_one"
+            android:layout_above="@id/disconnect_any"
+            android:layout_marginTop="8dp"
+            android:layout_marginHorizontal="8dp"
+            android:onClick="connectFlirOne"
+            
+            android:text="@string/connect_f1_text"
+            android:textColor="@android:color/white"
+            android:background="@color/colorPrimary"
+
+            />
+        <Button
+            android:id="@+id/disconnect_any"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginVertical="4dp"
+            android:layout_marginHorizontal="8dp"
+            android:onClick="disconnect"
+            android:background="@android:color/holo_red_light"
+            android:text="@string/disconnect_text"
+            android:textColor="@android:color/white"
+            />
+
+</RelativeLayout>
