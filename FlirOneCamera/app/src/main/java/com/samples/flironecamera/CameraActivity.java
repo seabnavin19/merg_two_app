@@ -98,7 +98,7 @@ public abstract class CameraActivity extends AppCompatActivity
   public   String temperatureData = null;
   public TextView temperature_Data;
 
-  public interface ShowMessage {
+    public interface ShowMessage {
     void show(String message);
   }
 
@@ -149,7 +149,6 @@ public abstract class CameraActivity extends AppCompatActivity
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
     super.onCreate(null);
-    // add
       ThermalLog.LogLevel enableLoggingInDebug;
       if (BuildConfig.DEBUG) enableLoggingInDebug = ThermalLog.LogLevel.DEBUG;
       else enableLoggingInDebug = ThermalLog.LogLevel.NONE;
@@ -158,15 +157,16 @@ public abstract class CameraActivity extends AppCompatActivity
       //ThermalLog will show log from the Thermal SDK in standards android log framework
       ThermalSdkAndroid.init(getApplicationContext(), enableLoggingInDebug);
 
-      permissionHandler = new PermissionHandler(showMessage, CameraActivity.this);
+        permissionHandler = new PermissionHandler(showMessage, CameraActivity.this);
 
       cameraHandler = new CameraHandler();
+
       temperature_Data=findViewById(R.id.connect_flir_one);
       msxImage=findViewById(R.id.msx_image);
 
 
       setupView();
-//      this.startDiscovery();
+      this.startDiscovery();
 
 
 
@@ -436,13 +436,13 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @Override
   public synchronized void onResume() {
-    LOGGER.d("onResume " + this);
+//    LOGGER.d("onResume " + this);
     super.onResume();
+    this.startDiscovery();
 //    this.startDiscovery();
-//      this.startDiscovery();
-      handlerThread = new HandlerThread("inference");
-      handlerThread.start();
-      handler = new Handler(handlerThread.getLooper());
+    handlerThread = new HandlerThread("inference");
+    handlerThread.start();
+    handler = new Handler(handlerThread.getLooper());
   }
 
   @Override
@@ -463,19 +463,20 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @Override
   public synchronized void onStop() {
-    LOGGER.d("onStop " + this);
+//    LOGGER.d("onStop " + this);
     super.onStop();
-//    this.stopDiscovery();
-//    this.disconnect();
+    this.stopDiscovery();
+    this.disconnect();
+
 
   }
 
   @Override
   public synchronized void onDestroy() {
-    LOGGER.d("onDestroy " + this);
+//    LOGGER.d("onDestroy " + this);
     super.onDestroy();
-//    this.stopDiscovery();
-//    this.disconnect();
+    this.stopDiscovery();
+    this.disconnect();
   }
 
   protected synchronized void runInBackground(final Runnable r) {
@@ -746,6 +747,14 @@ public abstract class CameraActivity extends AppCompatActivity
     public void disconnect(View view) {
         disconnect();
     }
+
+    /**
+     * Handle Android permission request response for Bluetooth permissions
+     */
+
+    /**
+     * Connect to a Camera
+     */
     private void connect(Identity identity) {
         //We don't have to stop a discovery but it's nice to do if we have found the camera that we are looking for
         cameraHandler.stopDiscovery(discoveryStatusListener);
@@ -774,6 +783,7 @@ public abstract class CameraActivity extends AppCompatActivity
         }
 
     }
+
     private UsbPermissionHandler.UsbPermissionListener permissionListener = new UsbPermissionHandler.UsbPermissionListener() {
         @Override
         public void permissionGranted(Identity identity) {
@@ -808,6 +818,7 @@ public abstract class CameraActivity extends AppCompatActivity
             }
         }).start();
     }
+
     /**
      * Disconnect to a camera
      */
@@ -824,10 +835,15 @@ public abstract class CameraActivity extends AppCompatActivity
             });
         }).start();
     }
+
+    /**
+     * Update the UI text for connection status
+     */
     private void updateConnectionText(Identity identity, String status) {
         String deviceId = identity != null ? identity.deviceId : "";
         CameraActivity.this.showMessage.show(deviceId + ": " + status);
     }
+
     /**
      * Start camera discovery
      */
@@ -835,12 +851,14 @@ public abstract class CameraActivity extends AppCompatActivity
         cameraHandler.startDiscovery(cameraDiscoveryListener, discoveryStatusListener);
 
     }
+
     /**
      * Stop camera discovery
      */
     private void stopDiscovery() {
         cameraHandler.stopDiscovery(discoveryStatusListener);
     }
+
     /**
      * Callback for discovery status, using it to update UI
      */
@@ -866,6 +884,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
         runOnUiThread(() -> updateConnectionText(connectedIdentity, "DISCONNECTED"));
     };
+
     private final CameraHandler.StreamDataListener streamDataListener = new CameraHandler.StreamDataListener() {
 
         @Override
@@ -896,10 +915,16 @@ public abstract class CameraActivity extends AppCompatActivity
                 //msxImage.setImageBitmap(poll.msxBitmap);
                 msxImage.setImageBitmap(poll.msxBitmap);
                 temperatureData = cameraHandler.getLogData();
-//                temperature_Data.setText(temperatureData);
+                Toast.makeText(CameraActivity.this,temperatureData,Toast.LENGTH_LONG).show();
             });
         }
     };
+
+    public void setData(View view){
+        TextView k= findViewById(R.id.temp_data);
+        k.setText(temperatureData);
+    }
+
     /**
      * Camera Discovery thermalImageStreamListener, is notified if a new camera was found during a active discovery phase
      * <p>
@@ -916,6 +941,7 @@ public abstract class CameraActivity extends AppCompatActivity
                 }
             });
         }
+
         @Override
         public void onDiscoveryError(CommunicationInterface communicationInterface, ErrorCode errorCode) {
             Log.d(TAG, "onDiscoveryError communicationInterface:" + communicationInterface + " errorCode:" + errorCode);
@@ -929,19 +955,33 @@ public abstract class CameraActivity extends AppCompatActivity
             });
         }
     };
+
     private ShowMessage showMessage = message -> Toast.makeText(CameraActivity.this, message, Toast.LENGTH_SHORT).show();
 
+//    private void showSDKversion(String version) {
+//        TextView sdkVersionTextView = findViewById(R.id.sdk_version);
+//        String sdkVersionText = getString(R.string.sdk_version_text, version);
+//        sdkVersionTextView.setText(sdkVersionText);
+//    }
+
+    private void setupViews() {
+//        descFlirOneStatus = findViewById(R.id.description);
+//        graphicOverlay = findViewById(R.id.graphic_overlay);
+        msxImage = findViewById(R.id.msx_image);
+
+        // disable the rectangle shape. because it needs to display when face is being detected
+//        this.graphicOverlay.clear();
+//        ActionBar actionBar = getSupportActionBar();
+//        assert actionBar != null;
+//        actionBar.setTitle("vKThermal App");
+    }
 
 
+    public String stringFourDigits(String str) {
+        return str.length() < 4 ? str : str.substring(0, 4);
+    }
 
-
-
-
-
-
-
-
-
-
-
+    public  String stringTwoDigits(String str) {
+        return str.length() < 2 ? str : str.substring(0, 2);
+    }
 }

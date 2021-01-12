@@ -41,6 +41,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flir.thermalsdk.androidsdk.BuildConfig;
 import com.flir.thermalsdk.androidsdk.ThermalSdkAndroid;
 import com.flir.thermalsdk.log.ThermalLog;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -70,7 +71,7 @@ import com.samples.flironecamera.tracking.MultiBoxTracker;
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
  * objects.
  */
-public class DetectorActivity extends CameraActivity implements OnImageAvailableListener {
+public class DetectorActivity extends CameraActivity  implements OnImageAvailableListener {
   private static final Logger LOGGER = new Logger();
 
 
@@ -143,27 +144,25 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   //to save the the iamge
   private ImageUtils imageUtils;
 
+  //add
 
-
-
-  //
 
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-//    ThermalLog.LogLevel enableLoggingInDebug = BuildConfig.DEBUG ? ThermalLog.LogLevel.DEBUG : ThermalLog.LogLevel.NONE;
-//
+//    ThermalLog.LogLevel enableLoggingInDebug;
+//    if (BuildConfig.DEBUG) enableLoggingInDebug = ThermalLog.LogLevel.DEBUG;
+//    else enableLoggingInDebug = ThermalLog.LogLevel.NONE;
 //    //ThermalSdkAndroid has to be initiated from a Activity with the Application Context to prevent leaking Context,
 //    // and before ANY using any ThermalSdkAndroid functions
 //    //ThermalLog will show log from the Thermal SDK in standards android log framework
 //    ThermalSdkAndroid.init(getApplicationContext(), enableLoggingInDebug);
-
-
-//    permissionHandler = new PermissionHandler(showMessage, DetectorActivity.this);
 //
-    cameraHandler = new CameraHandler();
+////        permissionHandler = new PermissionHandler(showMessage, MainActivity.this);
+//
+//    cameraHandler = new CameraHandler();
 
     fabAdd = findViewById(R.id.fab_add);
     fabAdd.setOnClickListener(new View.OnClickListener() {
@@ -528,7 +527,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       final RectF boundingBox = new RectF(face.getBoundingBox());
 //      temperature_Data.setText(temperatureData);
-      temp=temperatureData;
+//      temp=temperatureData;
 //      Log.d("temp",temperatureData);
 //      Toast.makeText(DetectorActivity.this,temperatureData,Toast.LENGTH_LONG).show();
 
@@ -557,7 +556,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         String label = "";
         float confidence = -1f;
-        Integer color = Color.YELLOW;
+        Integer color = Color.BLUE;
         Object extra = null;
         Bitmap crop = null;
 
@@ -639,6 +638,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
   }
+
+
 
 
 }

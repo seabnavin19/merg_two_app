@@ -55,6 +55,7 @@
 <!--                android:layout_marginLeft="50dp"-->
 <!--                android:text="VKThermal"/>-->
 
+
         </androidx.appcompat.widget.Toolbar>
 
     </RelativeLayout>
@@ -110,14 +111,15 @@
         android:text="Connect"
         android:layout_marginLeft="20dp"
         android:onClick="connectFlirOne"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
+        android:paddingLeft="25dp"
+        android:paddingRight="25dp"
         app:layout_anchor="@id/bottom_sheet_layout"
         app:layout_anchorGravity="top|start"
-        android:textColor="@android:color/holo_green_dark" />
+        android:textColor=" #7bc043"
+        android:background="@drawable/connect_button" />
     <Button
         android:id="@+id/disconnect_flir"
-        android:onClick="disconnect"
+        android:onClick="setData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -126,17 +128,18 @@
         android:layout_marginRight="20dp"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
-        android:background="@drawable/connect_button"
         app:layout_anchor="@id/bottom_sheet_layout"
         app:layout_anchorGravity="top|end"
         android:textColor="@android:color/holo_red_light" />
-<!--    <TextView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        app:layout_anchor="@id/bottom_sheet_layout"-->
-<!--        app:layout_anchorGravity="top|center"-->
-<!--        android:textColor="@android:color/holo_red_light"-->
-<!--        android:text="Temperature"/>-->
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temperature"
+        android:id="@+id/temp_data"
+        android:textColor="@android:color/holo_red_light"
+        app:layout_anchor="@id/bottom_sheet_layout"
+        app:layout_anchorGravity="top|center" />
 
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton

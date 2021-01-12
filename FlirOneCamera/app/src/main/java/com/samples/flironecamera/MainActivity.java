@@ -11,6 +11,7 @@
 package com.samples.flironecamera;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -78,6 +79,11 @@ public class MainActivity extends AppCompatActivity {
     GraphicOverlay graphicOverlay;
 
     private  String temperatureData = null;
+
+    public void getRe(View view) {
+        Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
+    }
+
     /**
      * Show message on the screen
      */
@@ -140,6 +146,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void connectFlirOne(View view) {
         connect(cameraHandler.getFlirOne());
+//        Intent i = new Intent(this,DetectorActivity.class);
+//        startActivity(i);
     }
 
     public void connectSimulatorOne(View view) {
@@ -239,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "disconnect() called with: connectedIdentity = [" + connectedIdentity + "]");
         new Thread(() -> {
             cameraHandler.disconnect();
-            graphicOverlay.clear();
+//            graphicOverlay.clear();
             runOnUiThread(() -> {
                     updateConnectionText(null, "DISCONNECTED");
                     descFlirOneStatus.setText("");
@@ -326,9 +334,12 @@ public class MainActivity extends AppCompatActivity {
                 //msxImage.setImageBitmap(poll.msxBitmap);
                 msxImage.setImageBitmap(poll.msxBitmap);
                 temperatureData = cameraHandler.getLogData();
+//                Toast.makeText(CameraActivity.this/])
             });
         }
     };
+
+
 
     /**
      * Camera Discovery thermalImageStreamListener, is notified if a new camera was found during a active discovery phase
@@ -375,10 +386,10 @@ public class MainActivity extends AppCompatActivity {
         msxImage = findViewById(R.id.msx_image);
 
         // disable the rectangle shape. because it needs to display when face is being detected
-        this.graphicOverlay.clear();
-        ActionBar actionBar = getSupportActionBar();
-        assert actionBar != null;
-        actionBar.setTitle("vKThermal App");
+//        this.graphicOverlay.clear();
+//        ActionBar actionBar = getSupportActionBar();
+//        assert actionBar != null;
+//        actionBar.setTitle("vKThermal App");
     }
 
 
