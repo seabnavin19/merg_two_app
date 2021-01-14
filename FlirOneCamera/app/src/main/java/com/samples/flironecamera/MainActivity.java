@@ -34,8 +34,8 @@ import com.flir.thermalsdk.live.connectivity.ConnectionStatusListener;
 import com.flir.thermalsdk.live.discovery.DiscoveryEventListener;
 import com.flir.thermalsdk.log.ThermalLog;
 
-import com.samples.flironecamera.helpers.GraphicOverlay;
-import com.samples.flironecamera.helpers.RectOverlay;
+//import com.samples.flironecamera.helpers.GraphicOverlay;
+//import com.samples.flironecamera.helpers.RectOverlay;
 
 import java.io.IOException;
 import java.util.List;
@@ -76,9 +76,9 @@ public class MainActivity extends AppCompatActivity {
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
 
-    GraphicOverlay graphicOverlay;
+//    GraphicOverlay graphicOverlay;
 
-    private  String temperatureData = null;
+    public   String temperatureData = null;
 
     public void getRe(View view) {
         Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
         //ThermalLog will show log from the Thermal SDK in standards android log framework
         ThermalSdkAndroid.init(getApplicationContext(), enableLoggingInDebug);
 
-//        permissionHandler = new PermissionHandler(showMessage, MainActivity.this);
+        permissionHandler = new PermissionHandler(showMessage, MainActivity.this);
 
         cameraHandler = new CameraHandler();
 
@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
 //            graphicOverlay.clear();
             runOnUiThread(() -> {
                     updateConnectionText(null, "DISCONNECTED");
-                    descFlirOneStatus.setText("");
+//                    descFlirOneStatus.setText("");
             });
         }).start();
     }
@@ -312,7 +312,6 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 //msxImage.setImageBitmap(dataHolder.dcBitmap);
                 msxImage.setImageBitmap(dataHolder.msxBitmap);
-               // photoImage.setImageBitmap(dataHolder.dcBitmap);
             });
         }
 
@@ -333,8 +332,8 @@ public class MainActivity extends AppCompatActivity {
                 assert poll != null;
                 //msxImage.setImageBitmap(poll.msxBitmap);
                 msxImage.setImageBitmap(poll.msxBitmap);
-                temperatureData = cameraHandler.getLogData();
-//                Toast.makeText(CameraActivity.this/])
+                temperatureData = stringFourDigits(cameraHandler.getLogData());
+//
             });
         }
     };
@@ -381,15 +380,10 @@ public class MainActivity extends AppCompatActivity {
 //    }
 
     private void setupViews() {
-        descFlirOneStatus = findViewById(R.id.description);
+//        descFlirOneStatus = findViewById(R.id.description);
 //        graphicOverlay = findViewById(R.id.graphic_overlay);
         msxImage = findViewById(R.id.msx_image);
 
-        // disable the rectangle shape. because it needs to display when face is being detected
-//        this.graphicOverlay.clear();
-//        ActionBar actionBar = getSupportActionBar();
-//        assert actionBar != null;
-//        actionBar.setTitle("vKThermal App");
     }
 
 

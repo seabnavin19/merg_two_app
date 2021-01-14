@@ -7,6 +7,15 @@
  *
  * Copyright 2019:    FLIR Systems
  *******************************************************************/
+/*******************************************************************
+ * @title FLIR THERMAL SDK
+ * @file PermissionHandler.java
+ * @Author FLIR Systems AB
+ *
+ * @brief Helper class for handling Android permission requests
+ *
+ * Copyright 2019:    FLIR Systems
+ *******************************************************************/
 package com.samples.flironecamera;
 
 import android.Manifest;
@@ -47,9 +56,9 @@ import androidx.core.content.ContextCompat;
 public class PermissionHandler {
 
     private static final String TAG = "PermissionHandler";
-    private final CameraActivity mainActivity;
+    private final MainActivity mainActivity;
 
-    CameraActivity.ShowMessage showMessage;
+    MainActivity.ShowMessage showMessage;
 
     @VisibleForTesting
     static String[] PERMISSIONS_FOR_NW_DISCOVERY = {
@@ -75,7 +84,7 @@ public class PermissionHandler {
             Manifest.permission.ACCESS_FINE_LOCATION,
     };
 
-    public PermissionHandler(CameraActivity.ShowMessage showMessage, CameraActivity mainActivity) {
+    public PermissionHandler(MainActivity.ShowMessage showMessage, MainActivity mainActivity) {
         this.showMessage = showMessage;
         this.mainActivity = mainActivity;
     }
