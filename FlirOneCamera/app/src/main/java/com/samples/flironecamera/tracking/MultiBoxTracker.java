@@ -68,6 +68,7 @@ public class MultiBoxTracker {
   private int frameWidth;
   private int frameHeight;
   private int sensorOrientation;
+  public String Name;
 
   public MultiBoxTracker(final Context context) {
     for (final int color : COLORS) {
@@ -149,17 +150,21 @@ public class MultiBoxTracker {
       final String strConfidence =
               recognition.detectionConfidence < 0
                       ? ""
-                      : String.format("%.2f", (recognition.detectionConfidence)) + "";
+                      : String.format("%.2f", (1f-recognition.detectionConfidence)) + "";
 
       final String labelString =
               !TextUtils.isEmpty(recognition.title)
               ? String.format("%s %s", recognition.title, strConfidence)
               : strConfidence;
+      Name=recognition.title;
 
       borderedText.drawText(
           canvas, trackedPos.left + cornerSize, trackedPos.top, labelString, boxPaint);
     }
   }
+ public String getName(){
+    return Name;
+ }
 
   private void processResults(final List<Recognition> results) {
     final List<Pair<Float, Recognition>> rectsToTrack = new LinkedList<Pair<Float, Recognition>>();

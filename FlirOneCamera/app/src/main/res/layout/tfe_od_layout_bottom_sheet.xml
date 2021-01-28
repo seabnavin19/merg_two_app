@@ -55,32 +55,60 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:weightSum="2"
+        android:layout_marginBottom="20dp"
         android:orientation="horizontal">
 
-        <TextView
+        <Button
             android:id="@+id/text"
+            android:layout_weight="1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Temperature"
-            android:textColor="@android:color/black" />
-        <TextView
-            android:id="@+id/frame_info"
-            android:layout_width="match_parent"
+            android:onClick="FetchAllFaceFromFirebase"
+            android:background="@drawable/button_selection"
+            android:text="Attendance"
+            android:textStyle="bold"
+            android:layout_marginRight="5dp"
+            android:textColor="@android:color/white" />
+        <Button
+            android:layout_weight="1"
+            android:textStyle="bold"
+            android:id="@+id/GotoAddFace"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="right"
-            android:text="640*480"
-            android:textColor="@android:color/black" />
-
+            android:onClick="GotoAddFace"
+            android:background="@drawable/button_selection"
+            android:text="Add People"
+            android:layout_marginLeft="5dp"
+            android:textColor="@android:color/white" />
 
 
 
     </LinearLayout>
-
-
-
 <!--    <LinearLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="vertical">-->
+
+<!--        <Button-->
+<!--            android:id="@+id/GotoAddFace"-->
+<!--            android:layout_width="300dp"-->
+<!--            android:layout_gravity="center"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:onClick="GotoAddFace"-->
+<!--            android:background="@drawable/connect_button"-->
+<!--            android:layout_marginTop="10dp"-->
+<!--            android:text="Add More People"-->
+<!--            android:textColor="@android:color/black" />-->
+
+
+
+<!--    </LinearLayout>-->
+
+
+
+
+    <!--    <LinearLayout-->
 <!--        android:layout_width="match_parent"-->
 <!--        android:layout_height="wrap_content"-->
 <!--        android:weightSum="2"-->
@@ -92,19 +120,25 @@
 <!--            android:layout_height="wrap_content"-->
 <!--            android:layout_marginTop="10dp"-->
 <!--            android:layout_weight="1"-->
-<!--            android:text="Connect"-->
-<!--            android:onClick="connectFlirOne"-->
+<!--            android:text="SaveImage"-->
+<!--            android:onClick="addFaceToFireBase"-->
 <!--            android:textColor="@android:color/black" />-->
 
-<!--        <Button-->
-<!--            android:id="@+id/disconnect_flir"-->
-<!--            android:onClick="disconnect"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
+<!--        <ImageView-->
+<!--            android:id="@+id/imageTest"-->
+<!--            android:layout_width="200dp"-->
+<!--            android:layout_height="200dp"-->
 <!--            android:layout_marginTop="10dp"-->
-<!--            android:layout_weight="1"-->
-<!--            android:text="Disconnect"-->
-<!--            android:textColor="@android:color/black" />-->
+<!--            android:src="@drawable/logo"-->
+<!--            android:layout_weight="1" />-->
+<!--&lt;!&ndash;        <Button&ndash;&gt;-->
+<!--&lt;!&ndash;            android:id="@+id/newact"&ndash;&gt;-->
+<!--&lt;!&ndash;            android:layout_width="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;            android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;            android:text="newact"&ndash;&gt;-->
+<!--&lt;!&ndash;            android:onClick="getNamesfromDB"&ndash;&gt;-->
+<!--&lt;!&ndash;            android:layout_marginTop="10dp"&ndash;&gt;-->
+<!--&lt;!&ndash;            android:layout_weight="1" />&ndash;&gt;-->
 <!--    </LinearLayout>-->
 
 <!--    <View-->

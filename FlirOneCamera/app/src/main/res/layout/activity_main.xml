@@ -19,13 +19,26 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_marginTop="100dp"
             android:layout_marginBottom="120dp"
-            android:textSize="20dp"
-            android:text="Connect to FilrOne"
-            android:textColor="#17A011"
+            android:textSize="50dp"
+            android:paddingRight="20dp"
+            android:paddingLeft="20dp"
+            android:text="me"
+           android:layout_centerHorizontal="true"
+            android:textColor="@android:color/white"
+            android:background="@drawable/data_temperature"
             android:id="@+id/temperatureText"
             />
+        <Button
+            android:layout_width="wrap_content"
+            android:visibility="invisible"
+            android:id="@+id/AddFaceButton"
+            android:layout_above="@+id/connect_flir_one"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="50dp"
+            android:text="Add This Face"
+            android:layout_height="wrap_content"/>
 <!--        <com.samples.flironecamera.helpers.GraphicOverlay-->
 <!--            android:layout_width="match_parent"-->
 <!--            android:layout_height="match_parent"-->

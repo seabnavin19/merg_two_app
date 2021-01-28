@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "154595231033",
+    "firebase_url": "https://flironecamera-5429e.firebaseio.com",
+    "project_id": "flironecamera-5429e",
+    "storage_bucket": "flironecamera-5429e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154595231033:android:7f65fd02813a7db61014e8",
+        "android_client_info": {
+          "package_name": "com.samples.flironecamera"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "154595231033-iisvttn09fc4eqdedc6iiid8em58m428.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.samples.flironecamera",
+            "certificate_hash": "6dca5522a7d3c997fc98a54b5a35d81322101b1d"
+          }
+        },
+        {
+          "client_id": "154595231033-r4v19pq0ab542hq9p8drd47if2gjl3ja.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbUAdcFeqL0GWkrrulcNIAjvk5Sk7wj9Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "154595231033-r4v19pq0ab542hq9p8drd47if2gjl3ja.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

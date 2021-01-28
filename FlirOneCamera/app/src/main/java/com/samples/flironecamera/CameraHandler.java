@@ -244,7 +244,7 @@ class CameraHandler {
                 thermalImage.getFusion().setThermalFusionAbove(new ThermalValue(0, TemperatureUnit.CELSIUS));
                 thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(400, TemperatureUnit.CELSIUS));
 
-                Palette palette = PaletteManager.getDefaultPalettes().get(0);
+                Palette palette = PaletteManager.getDefaultPalettes().get(1);
                 thermalImage.setPalette(palette);
                 thermalImage.setTemperatureUnit(TemperatureUnit.CELSIUS);
 

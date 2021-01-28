@@ -17,12 +17,17 @@ package com.samples.flironecamera.tflite;
 
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Generic interface for interacting with different recognition engines. */
 public interface SimilarityClassifier {
+  public HashMap<String, Recognition> getRegisterList();
 
   void register(String name, Recognition recognition);
+  void unregister();
 
   List<Recognition> recognizeImage(Bitmap bitmap, boolean getExtra);
 
@@ -51,7 +56,7 @@ public interface SimilarityClassifier {
      * A sortable score for how good the recognition is relative to others. Lower should be better.
      */
     private final Float distance;
-    private Object extra;
+    private float[][] extra;
 
     /** Optional location within the source image for the location of the recognized object. */
     private RectF location;
@@ -69,10 +74,10 @@ public interface SimilarityClassifier {
       this.crop = null;
     }
 
-    public void setExtra(Object extra) {
+    public void setExtra(float[][] extra) {
         this.extra = extra;
     }
-    public Object getExtra() {
+    public float[][] getExtra() {
         return this.extra;
     }
 

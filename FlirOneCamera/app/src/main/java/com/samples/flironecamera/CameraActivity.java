@@ -121,8 +121,8 @@ public abstract class CameraActivity extends MainActivity
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
 
-  private LinearLayout bottomSheetLayout;
-  private LinearLayout gestureLayout;
+  public LinearLayout bottomSheetLayout;
+  public LinearLayout gestureLayout;
   private BottomSheetBehavior<LinearLayout> sheetBehavior;
 
 //  protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
