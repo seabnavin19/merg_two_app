@@ -19,6 +19,7 @@ package com.samples.flironecamera;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -30,6 +31,7 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -50,6 +52,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -62,12 +65,14 @@ import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -166,6 +171,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private  HashMap<String,String> resultMap;
   private  int Noface;
   private String ID;
+  private String currentuser;
+  public  int Attendance;
+  private MediaPlayer mp;
+  private MediaPlayer alert;
+
 
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
@@ -185,25 +195,26 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    AskingDialog();
-//    DatabaseHelper db= new DatabaseHelper(DetectorActivity.this);
-    RegisterFaceFromFireBase();
+    Intent i = getIntent();
+    String email= i.getStringExtra("Email");
+    if (email.equals("No")){
+      Attendance=0;
+    }
+    else {
+      RegisterFaceFromFireBase();
+      AskingDialog();
+      currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
+      Attendance=1;
+      Log.d("user",currentuser);
+    }
+    mp=MediaPlayer.create(this,R.raw.temprature_checked);
+    alert=MediaPlayer.create(this,R.raw.alert);
     fabAdd = findViewById(R.id.fab_add);
     connectButton=findViewById(R.id.connect_to_flir);
     disconnectButton=findViewById(R.id.disconnect_flir);
     backButton=findViewById(R.id.ChangeAttendance);
     IdFace= new HashSet<>();
     temperatures= new ArrayList<>();
-//    addButton=findViewById(R.id.AddFaceButton);
-//    Bundle extras = getIntent().getExtras();
-//    if (extras!=null){
-//      String activity= extras.getString("activity");
-//      if (activity.equalsIgnoreCase("addFace")){
-////        addButton.setVisibility(View.VISIBLE);
-//      }
-//    }
-//    framText=findViewById(R.id.frame_info);
-//    addtoFire();
     fabAdd.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -480,7 +491,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     rec.setColor(1);
     ivFace.setImageBitmap(rec.getCrop());
     NewPerson=rec;
-    Log.d("bitmap",rec.getCrop().toString());
     etName.setHint("Enter name");
     id.setHint("Enter Id");
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -494,6 +504,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       @Override
       public void onClick(DialogInterface dlg, int i) {
           String name = etName.getText().toString();
+          detector.register(name,rec);
           NameFromFirebase=name;
           ID=id.getText().toString();
           if (name.isEmpty()) {
@@ -542,6 +553,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             });
 
   }
+  int take=1;
 
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
 
@@ -583,6 +595,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     final Canvas cvFace = new Canvas(faceBmp);
     boolean saved = false;
+    Face facea=faces.get(0);
+    final RectF boundingBoxt = new RectF(facea.getBoundingBox());
+    if (Attendance==0){
+      if ((boundingBoxt.left-boundingBoxt.right)<-150.0 && (take==1)){
+        if (temperatureData==null){
+          temperatureData="0";
+        }
+        Float temp=Float.parseFloat(temperatureData);
+        temperatures.add(temperatureData);
+      }
+      if (temperatures.size()>=10){
+        take=0;
+        TemperatureDialog();
+      }
+    }
+
 
     for (Face face : faces) {
 
@@ -652,11 +680,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               if (temperatureData==null){
                 temperatureData="0";
               }
-              Float temp=Float.parseFloat(temperatureData);
-              if (temp>33 && temp<40){
-                temperatures.add(temperatureData);
-              }
+//              Float temp=Float.parseFloat(temperatureData);
               temperatures.add(temperatureData);
+
               Check(result.getCrop());
 
               Log.d("MyFace",String.valueOf(AddedFace));
@@ -869,27 +895,55 @@ public void GoToAttendance(View view){
 
 public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<String> temperatures){
     HashMap<String,String> result= new HashMap<>();
+
+    ArrayList<String> temperature= new ArrayList<>();
+
+
+
     if (Id.size()==1){
       result.put("Id",Id.get(0));
       Float sum=0f;
       Float average;
-      for (String i: temperatures){
+
+      //to remove unwanted temperature from the list
+      for (String tem: temperatures){
+        if (Float.parseFloat(tem)>35){
+//          temperatures.remove(tem);
+          temperature.add(tem);
+          Toast.makeText(DetectorActivity.this,"hello",Toast.LENGTH_LONG).show();
+        }
+      }
+
+
+      // to find the average temperature
+
+      for (String i: temperature){
         if (i==null){
           sum+=0;
         }else {
           sum+=Float.parseFloat(i);
         }
       }
-      average=sum/temperatures.size();
-      result.put("Temp",stringFourDigits(Float.toString(average)));
+      if (temperature.size()==0){
+        result.put("Temp","0.0");
+      }
+      else {
+        average=sum/temperature.size();
+        result.put("Temp",stringFourDigits(Float.toString(average)));
+      }
+
     }
+
     Log.d("HH",temperatures.toString());
+    mp.start();
 
     return result;
 
 }
 
 
+
+// alert when the application generate the temperature
 public void InfoDialog(){
 
   String date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
@@ -900,7 +954,8 @@ public void InfoDialog(){
   TextView name= dialogLayout.findViewById(R.id.finalName);
   TextView temp=dialogLayout.findViewById(R.id.finalTemperature);
   TextView dateText=dialogLayout.findViewById(R.id.finalDate);
-  ImageView image= dialogLayout.findViewById(R.id.finalName);
+
+
   builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
     @Override
     public void onClick(DialogInterface dialog, int which) {
@@ -908,10 +963,15 @@ public void InfoDialog(){
       AddedFace=0;
       IdFace.clear();
       temperatures.clear();
-      sendAttenDanceToFirebase(date,resultMap.get("Id"),resultMap.get("Temp"));
+      if (Attendance!=0){
+          sendAttenDanceToFirebase(date,resultMap.get("Id"),resultMap.get("Temp"));
+      }
+
     }
   });
-  name.setText("Name: "+resultMap.get("Id"));
+  if (Attendance!=0){
+      name.setText("Name: "+resultMap.get("Id"));
+  }
   temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")));
   dateText.setText("Date: "+date);
   builder.setView(dialogLayout);
@@ -922,12 +982,49 @@ public void InfoDialog(){
 
 }
 
+ private  void TemperatureDialog() {
+    ArrayList<String> id= new ArrayList<>();
+    id.add("go");
+    HashMap<String,String> result = StoreAttendance(id,temperatures);
+     temperatures.clear();
+     String date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+     AlertDialog.Builder builder = new AlertDialog.Builder(this);
+     LayoutInflater inflater = getLayoutInflater();
+     View dialogLayout = inflater.inflate(R.layout.info_dialog, null);
+     TextView name= dialogLayout.findViewById(R.id.finalName);
+     TextView temp=dialogLayout.findViewById(R.id.finalTemperature);
+     TextView dateText=dialogLayout.findViewById(R.id.finalDate);
+     builder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+         @Override
+         public void onClick(DialogInterface dialog, int which) {
+             take=1;
+             temperatures.clear();
+             alert.stop();
+             alert=MediaPlayer.create(DetectorActivity.this,R.raw.alert);
+         }
+     });
+     name.setText("Normal");
+     dateText.setText(date);
+     temp.setText(result.get("Temp"));
+     builder.setView(dialogLayout);
+     builder.show();
+     if (Float.parseFloat(result.get("Temp"))==0){
+         alert.start();
+     }
+//     temp.setText(stringFourDigits(String.valueOf(avg)));
+}
+
+
+//to put the temperature and face into a list
+
 public void Check(Bitmap bitmap){
   if (tracker.getName()!="" && Allow_FaceDetect){
     IdFace.add(tracker.getName());
     AddedFace+=1;
 
   }
+
+  // we need to have only one face inorder to generate the temperature
   if (AddedFace==9 && IdFace.size()==1){
     Allow_FaceDetect=false;
     AddedFace=0;
@@ -952,7 +1049,7 @@ public void sendAttenDanceToFirebase(String Date,String Id,String Temperature){
     Map<String, Object> user = new HashMap<>();
     ArrayList<String> info= new ArrayList<>(Arrays.asList(Id,Status,Temperature,Date));
     user.put(Id,info);
-    db.collection("Attendance").document(Date).set(user,SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
+    db.collection(currentuser).document(Date).set(user,SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
       @Override
       public void onComplete(@NonNull Task<Void> task) {
         if (task.isSuccessful()){

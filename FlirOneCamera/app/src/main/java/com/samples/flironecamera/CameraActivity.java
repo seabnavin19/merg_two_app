@@ -411,11 +411,11 @@ public abstract class CameraActivity extends MainActivity
     Trace.endSection();
   }
 
-  @Override
-  public synchronized void onStart() {
-    LOGGER.d("onStart " + this);
-    super.onStart();
-  }
+//  @Override
+//  public synchronized void onStart() {
+//    LOGGER.d("onStart " + this);
+//    super.onStart();
+//  }
 
   @Override
   public synchronized void onResume() {
@@ -442,19 +442,19 @@ public abstract class CameraActivity extends MainActivity
     super.onPause();
   }
 
-  @Override
-  public synchronized void onStop() {
-//    LOGGER.d("onStop " + this);
-    super.onStop();
-
-  }
-
-  @Override
-  public synchronized void onDestroy() {
-//    LOGGER.d("onDestroy " + this);
-    super.onDestroy();
-
-  }
+//  @Override
+//  public synchronized void onStop() {
+////    LOGGER.d("onStop " + this);
+//    super.onStop();
+//
+//  }
+//
+//  @Override
+//  public synchronized void onDestroy() {
+////    LOGGER.d("onDestroy " + this);
+//    super.onDestroy();
+//
+//  }
 
   protected synchronized void runInBackground(final Runnable r) {
     if (handler != null) {
@@ -465,7 +465,7 @@ public abstract class CameraActivity extends MainActivity
 
   @Override
   public void onRequestPermissionsResult(
-       int requestCode,  String[] permissions, int[] grantResults) {
+          int requestCode,  String[] permissions, int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (requestCode == PERMISSIONS_REQUEST) {
       if (allPermissionsGranted(grantResults)) {
