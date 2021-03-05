@@ -53,8 +53,8 @@ public class TFLiteObjectDetectionAPIModel
 
   private static final Logger LOGGER = new Logger();
 
-  //private static final int OUTPUT_SIZE = 512;
-  private static final int OUTPUT_SIZE = 192;
+  private static final int OUTPUT_SIZE = 512;
+//  private static final int OUTPUT_SIZE = 192;
 
   // Only return this many results.
   private static final int NUM_DETECTIONS = 1;
@@ -299,6 +299,8 @@ public class TFLiteObjectDetectionAPIModel
     Trace.endSection();
     return recognitions;
   }
+
+
 
   @Override
   public void enableStatLogging(final boolean logStats) {}

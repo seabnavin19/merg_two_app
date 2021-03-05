@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="30dp"
+        android:textColor="#FF9800"
+        android:textSize="30dp"
+        android:text="Change password"/>
+    <TextView
+        android:id="@+id/descript"
+        android:layout_width="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:text="Enter you email we will allow you to reset the password soon"
+        android:layout_height="wrap_content"/>
+    <EditText
+        android:layout_margin="20dp"
+        android:layout_width="match_parent"
+        android:padding="10dp"
+        android:textColor="#FF9800"
+        android:layout_height="wrap_content"
+        android:hint="email"
+        android:background="@drawable/input_name"
+        android:id="@+id/email_changed"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:id="@+id/change"
+        android:onClick="Changepass"
+        android:layout_gravity="center"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:textColor="#ffffff"
+        android:background="@drawable/button_selection"
+        android:layout_height="wrap_content"
+        android:text="Send"/>
+</LinearLayout>

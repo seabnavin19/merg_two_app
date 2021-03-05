@@ -35,7 +35,8 @@
             android:layout_marginTop="55dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context="org.tensorflow.demo.CameraActivity" />
+            tools:context="com.samples.flironecamera.CameraActivity" >
+        </FrameLayout>
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -43,14 +44,18 @@
             android:layout_height="?attr/actionBarSize"
             android:layout_alignParentTop="true"
             android:background="@color/tfe_semi_transparent">
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:src="@drawable/success"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+           <Button
+               android:layout_width="wrap_content"
+               android:text="Logout"
+               android:textColor="#FF9800"
+               android:onClick="signOut"
+               android:background="@drawable/button_selection"
+               android:drawableStart="@drawable/account"
+               android:layout_height="wrap_content"/>
 
 
             <ImageView
-                android:visibility="visible"
+                android:visibility="invisible"
                 android:layout_marginLeft="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -158,7 +163,7 @@
 <!--        android:layout_width="wrap_content"-->
 <!--        android:layout_height="wrap_content"-->
 <!--        android:text="Temperature"-->
-<!--        android:id="@+id/temp_data"-->
+<!--        a   sndroid:id="@+id/temp_data"-->
 <!--        android:textColor="@android:color/holo_red_light"-->
 <!--        app:layout_anchor="@id/bottom_sheet_layout"-->
 <!--        app:layout_anchorGravity="top|center" />-->

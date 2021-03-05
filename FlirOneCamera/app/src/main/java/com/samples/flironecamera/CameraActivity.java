@@ -464,9 +464,9 @@ public abstract class CameraActivity extends MainActivity
   }
 
   @Override
-  public void onRequestPermissionsResult(
-          int requestCode,  String[] permissions, int[] grantResults) {
+  public void onRequestPermissionsResult(int requestCode,  String[] permissions, int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      permissionHandler.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (requestCode == PERMISSIONS_REQUEST) {
       if (allPermissionsGranted(grantResults)) {
         setFragment();
@@ -685,6 +685,7 @@ public abstract class CameraActivity extends MainActivity
 //    inferenceTimeTextView.setText(inferenceTime);
 //      temperature_Data.setText("hello");
   }
+
 
   protected abstract void processImage();
 

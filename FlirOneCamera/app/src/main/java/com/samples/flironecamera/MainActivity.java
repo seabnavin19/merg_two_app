@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     //Handles Android permission for eg Network
-    private PermissionHandler permissionHandler;
+    public PermissionHandler permissionHandler;
 
     //Handles network camera operations
     private CameraHandler cameraHandler;
@@ -165,11 +165,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Handle Android permission request response for Bluetooth permissions
      */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        Log.d(TAG, "onRequestPermissionsResult() called with: requestCode = [" + requestCode + "], permissions = [" + permissions + "], grantResults = [" + grantResults + "]");
-        permissionHandler.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
+
 
     /**
      * Connect to a Camera

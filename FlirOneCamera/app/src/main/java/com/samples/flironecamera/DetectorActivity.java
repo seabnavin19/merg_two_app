@@ -27,8 +27,10 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.media.MediaPlayer;
@@ -40,9 +42,11 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -69,6 +73,7 @@ import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -99,15 +104,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
   // FaceNet
-//  private static final int TF_OD_API_INPUT_SIZE = 160;
-//  private static final boolean TF_OD_API_IS_QUANTIZED = false;
-//  private static final String TF_OD_API_MODEL_FILE = "facenet.tflite";
-//  //private static final String TF_OD_API_MODEL_FILE = "facenet_hiroki.tflite";
+  private static final int TF_OD_API_INPUT_SIZE = 160;
+  private static final boolean TF_OD_API_IS_QUANTIZED = false;
+  private static final String TF_OD_API_MODEL_FILE = "facenet.tflite";
+  //private static final String TF_OD_API_MODEL_FILE = "facenet_hiroki.tflite";
 
   // MobileFaceNet
-  private static final int TF_OD_API_INPUT_SIZE = 112;
-  private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "mobile_face_net.tflite";
+//  private static final int TF_OD_API_INPUT_SIZE = 112;
+//  private static final boolean TF_OD_API_IS_QUANTIZED = false;
+//  private static final String TF_OD_API_MODEL_FILE = "mobile_face_net.tflite";
 
 
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
@@ -177,6 +182,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private MediaPlayer alert;
 
 
+  //to hide this 2 button
+  private Button attendance;
+  private Button add_people;
+
+
+
+  //per location
+  private  EditText location;
+  private String location_txt="No location selected";
+
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
   public String stringFourDigits(String str) {
@@ -191,6 +206,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   //list of face fetch from database
   private List<Map<String,Object>> AllFaceFromDataBase;
   private Button addButton;
+  private Spinner dropdown;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -201,9 +217,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       Attendance=0;
     }
     else {
-      RegisterFaceFromFireBase();
+
       AskingDialog();
       currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
+      RegisterFaceFromFireBase();
       Attendance=1;
       Log.d("user",currentuser);
     }
@@ -213,6 +230,17 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     connectButton=findViewById(R.id.connect_to_flir);
     disconnectButton=findViewById(R.id.disconnect_flir);
     backButton=findViewById(R.id.ChangeAttendance);
+    attendance=findViewById(R.id.text_attendance);
+    add_people=findViewById(R.id.GotoAddFace);
+
+    //
+//    location= findViewById(R.id.location);
+
+
+    if (Attendance==0){
+      add_people.setVisibility(View.INVISIBLE);
+      attendance.setVisibility(View.INVISIBLE);
+    }
     IdFace= new HashSet<>();
     temperatures= new ArrayList<>();
     fabAdd.setOnClickListener(new View.OnClickListener() {
@@ -230,7 +258,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
                     .build();
 
-
     FaceDetector detector = FaceDetection.getClient(options);
 
     faceDetector = detector;
@@ -238,6 +265,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
     //checkWritePermission();
+
+    //get the spinner from the xml.
+    dropdown = findViewById(R.id.spinner1);
+//create a list of items for the spinner.
+    String[] items = new String[]{"1", "2", "three"};
+//create an adapter to describe how the items are displayed, adapters are used in several places in android.
+//There are multiple variations of this, but this is the basic variant.
+    ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+//set the spinners adapter to the previously created one.
+    dropdown.setAdapter(adapter);
 
   }
 
@@ -515,7 +552,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           progressDialog.setMessage("Uploading Image To DataBase..!");
           progressDialog.show();
           AddNewFace();
-
           dlg.dismiss();
       }
     });
@@ -671,7 +707,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          }
 
           float conf = result.getDistance();
-          if (conf < 0.75f) {
+          if (conf < 0.65f) {
             confidence = conf;
             label = result.getTitle();
             if (result.getId().equals("0")) {
@@ -731,6 +767,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //      lastSaved = System.currentTimeMillis();
 //    }
 
+
     updateResults(currTimestamp, mappedRecognitions);
 
 
@@ -786,6 +823,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     LoadFaceFromFirebase();
 //    AddNewFace();
   }
+
+  private HashMap<String,String> userIDFace= new HashMap<>();
   public void LoadFaceFromFirebase(){
     for (Map<String, Object> document : AllFaceFromDataBase){
       float[][] Extra= new float[1][];
@@ -795,6 +834,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       float[] arr0= new float[ArrayListExtra.size()];
       int i=0;
       String Name=document.get("Name").toString();
+      userIDFace.put(Name,document.get("ID").toString());
+
       for (int k=0;k<ArrayListExtra.size();k++){
         arr0[k]= Float.parseFloat(String.valueOf(ArrayListExtra.get(k)));
       }
@@ -802,7 +843,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       SimilarityClassifier.Recognition Newface= new SimilarityClassifier.Recognition(document.get("Id").toString(),document.get("Title").toString(),Distance,new RectF());
       Newface.setExtra(Extra);
       detector.register(Name,Newface);
-
 
     }
     Toast.makeText(DetectorActivity.this,"Sucess register",Toast.LENGTH_LONG).show();
@@ -827,7 +867,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       p+=1;
     }
 
-    db.collection("Users").document(ID).set(user, SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
+    db.collection(currentuser+"Face").document(ID).set(user, SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
       @Override
       public void onComplete(@NonNull Task<Void> task) {
         if (task.isSuccessful()){
@@ -842,7 +882,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 public void RegisterFaceFromFireBase() {
   FirebaseFirestore db = FirebaseFirestore.getInstance();
-  db.collection("Users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+  db.collection(currentuser+"Face").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
     @Override
     public void onComplete(@NonNull Task<QuerySnapshot> task) {
      if (task.isSuccessful()){
@@ -855,12 +895,13 @@ public void RegisterFaceFromFireBase() {
            user.put("Title", document.getData().get("title"));
            user.put("Extra", document.getData().get("n0"));
            user.put("Name", document.getData().get("Name"));
+           user.put("ID",document.getData().get("ID"));
            usersReplace.add(user);
          }
 
        }
        AllFaceFromDataBase=usersReplace;
-       sucessToast("Successful Register People In App");
+       successToast("Registered");
 
 //       Toast.makeText(DetectorActivity.this, "Success get all Face from Firebase", Toast.LENGTH_LONG).show();;
 
@@ -871,7 +912,7 @@ public void RegisterFaceFromFireBase() {
 
 }
 
-
+//private ImageView im;
 public void GotoAddFace(View view){
     fabAdd.setVisibility(View.VISIBLE);
     backButton.setVisibility(View.VISIBLE);
@@ -879,6 +920,21 @@ public void GotoAddFace(View view){
     detector.unregister();
     connectButton.setVisibility(View.INVISIBLE);
     disconnectButton.setVisibility(View.INVISIBLE);
+//  im=findViewById(R.id.newFaceImage);
+//  BitmapDrawable drawable= (BitmapDrawable) im.getDrawable();
+//  Bitmap bitmap_im= drawable.getBitmap();
+//  InputImage image= InputImage.fromBitmap(bitmap_im,0);
+//  faceDetector.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+//    @Override
+//    public void onSuccess(List<Face> faces) {
+//      if (faces.size()==0)
+//    }
+//  });
+
+
+
+
+
 
 
 }
@@ -895,7 +951,6 @@ public void GoToAttendance(View view){
 
 public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<String> temperatures){
     HashMap<String,String> result= new HashMap<>();
-
     ArrayList<String> temperature= new ArrayList<>();
 
 
@@ -964,7 +1019,7 @@ public void InfoDialog(){
       IdFace.clear();
       temperatures.clear();
       if (Attendance!=0){
-          sendAttenDanceToFirebase(date,resultMap.get("Id"),resultMap.get("Temp"));
+          sendAttenDanceToFirebase(userIDFace.get(resultMap.get("Id")),date,resultMap.get("Id"),resultMap.get("Temp"));
       }
 
     }
@@ -981,6 +1036,8 @@ public void InfoDialog(){
 
 
 }
+
+
 
  private  void TemperatureDialog() {
     ArrayList<String> id= new ArrayList<>();
@@ -1010,6 +1067,7 @@ public void InfoDialog(){
      builder.show();
      if (Float.parseFloat(result.get("Temp"))==0){
          alert.start();
+
      }
 //     temp.setText(stringFourDigits(String.valueOf(avg)));
 }
@@ -1043,24 +1101,27 @@ public void Check(Bitmap bitmap){
 }
 
 
-public void sendAttenDanceToFirebase(String Date,String Id,String Temperature){
+public void sendAttenDanceToFirebase(String ID,String Date,String Id,String Temperature){
     FirebaseFirestore db= FirebaseFirestore.getInstance();
+    location_txt= dropdown.getSelectedItem().toString();
     String Status="OK";
+    successToast(location_txt);
+    String hour = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
     Map<String, Object> user = new HashMap<>();
-    ArrayList<String> info= new ArrayList<>(Arrays.asList(Id,Status,Temperature,Date));
-    user.put(Id,info);
+    ArrayList<String> info= new ArrayList<>(Arrays.asList(ID,Id,Status,Temperature,Date,location_txt,hour));
+    user.put(Id+location_txt+hour,info);
     db.collection(currentuser).document(Date).set(user,SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
       @Override
       public void onComplete(@NonNull Task<Void> task) {
         if (task.isSuccessful()){
-          sucessToast("Successful Check The Attendnace");
+          successToast("Attendance Checked!");
         }
       }
     });
 }
 
 
-public void sucessToast(String Message){
+public void successToast(String Message){
   LayoutInflater inflater = getLayoutInflater();
   View layout = inflater.inflate(R.layout.sucess_toast,null);
 
@@ -1072,5 +1133,24 @@ public void sucessToast(String Message){
   toast.setDuration(Toast.LENGTH_LONG);
   toast.show();
 }
+
+
+public void signOut(View view){
+    FirebaseAuth.getInstance().signOut();
+    Intent i = new Intent(DetectorActivity.this,login.class);
+    startActivity(i);
+    finish();
+}
+
+
+// to modified the location
+  public void InputLocation(View view){
+    String locate=location.getText().toString();
+    location_txt= locate;
+    successToast("Change location to "+ location_txt);
+
+  }
+
+
 
 }
