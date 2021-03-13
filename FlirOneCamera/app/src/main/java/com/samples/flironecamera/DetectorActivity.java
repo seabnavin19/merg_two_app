@@ -42,6 +42,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -53,11 +54,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -190,7 +193,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   //per location
   private  EditText location;
-  private String location_txt="No location selected";
+  private String location_txt="three";
+  private FirebaseFirestore db;
 
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
@@ -218,9 +222,32 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
     else {
 
+      dropdown = findViewById(R.id.spinner1);
+
+      String[] items = new String[]{"1", "2", "three"};
+
+      ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+
+      dropdown.setAdapter(adapter);
+
       AskingDialog();
       currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
-      RegisterFaceFromFireBase();
+
+
+      dropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+          location_txt= dropdown.getSelectedItem().toString();
+          successToast("mother");
+          RegisterFaceFromFireBase();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+      });
+
       Attendance=1;
       Log.d("user",currentuser);
     }
@@ -235,6 +262,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     //
 //    location= findViewById(R.id.location);
+
 
 
     if (Attendance==0){
@@ -266,15 +294,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     //checkWritePermission();
 
-    //get the spinner from the xml.
-    dropdown = findViewById(R.id.spinner1);
-//create a list of items for the spinner.
-    String[] items = new String[]{"1", "2", "three"};
-//create an adapter to describe how the items are displayed, adapters are used in several places in android.
-//There are multiple variations of this, but this is the basic variant.
-    ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
-//set the spinners adapter to the previously created one.
-    dropdown.setAdapter(adapter);
+
+
+
 
   }
 
@@ -844,6 +866,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       Newface.setExtra(Extra);
       detector.register(Name,Newface);
 
+
     }
     Toast.makeText(DetectorActivity.this,"Sucess register",Toast.LENGTH_LONG).show();
   }
@@ -866,14 +889,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       user.put("n"+ p,n);
       p+=1;
     }
-
-    db.collection(currentuser+"Face").document(ID).set(user, SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
+    location_txt= dropdown.getSelectedItem().toString();
+    People_Face people_face = new People_Face(NewPerson.getId(),NameFromFirebase,NewPerson.getDistance(),n,NewPerson.getTitle());
+    db.collection(currentuser).document("Face").update(location_txt+"."+ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
       @Override
-      public void onComplete(@NonNull Task<Void> task) {
-        if (task.isSuccessful()){
-          Toast.makeText(DetectorActivity.this,"Sucess",Toast.LENGTH_LONG).show();
-          progressDialog.dismiss();
-        }
+      public void onSuccess(Void aVoid) {
+        progressDialog.dismiss();
       }
     });
 
@@ -882,33 +903,42 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 public void RegisterFaceFromFireBase() {
   FirebaseFirestore db = FirebaseFirestore.getInstance();
-  db.collection(currentuser+"Face").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+  db.collection(currentuser).document("Face").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
     @Override
-    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-     if (task.isSuccessful()){
-       List<Map<String, Object>> usersReplace = new ArrayList<>();
-       for (QueryDocumentSnapshot document : task.getResult()) {
-         Map<String, Object> user = new HashMap<>();
-         if (document.exists()) {
-           user.put("Id", document.getData().get("Id_image"));
-           user.put("Distance", document.getData().get("distance"));
-           user.put("Title", document.getData().get("title"));
-           user.put("Extra", document.getData().get("n0"));
-           user.put("Name", document.getData().get("Name"));
-           user.put("ID",document.getData().get("ID"));
+    public void onSuccess(DocumentSnapshot documentSnapshot) {
+      if (documentSnapshot.get(location_txt)!=null){
+        HashMap<String,Object> me= (HashMap<String, Object>) documentSnapshot.get(location_txt);
+        List<Map<String, Object>> usersReplace = new ArrayList<>();
+        Log.d("kkkkk",me.toString());
+        for (Map.Entry element: me.entrySet()){
+           Map<String, Object> user = new HashMap<>();
+           String key = (String) element.getKey();
+           HashMap<String,Object> by_key= (HashMap<String, Object>) me.get(key);
+           user.put("Id",by_key.get("id"));
+           user.put("Distance",by_key.get("distance"));
+           user.put("Title",by_key.get("title"));
+           user.put("Extra",by_key.get("face"));
+           user.put("Name",by_key.get("name"));
+           user.put("ID",key);
            usersReplace.add(user);
+//           Log.d("kkkkk",user.toString());
+
          }
+        AllFaceFromDataBase=usersReplace;
+        successToast(String.valueOf(usersReplace.size()));
 
-       }
-       AllFaceFromDataBase=usersReplace;
-       successToast("Registered");
+      }
+      else {
+        AllFaceFromDataBase = new ArrayList<>();
+        Log.d("kkkkk",location_txt);
 
-//       Toast.makeText(DetectorActivity.this, "Success get all Face from Firebase", Toast.LENGTH_LONG).show();;
+      }
+      detector.unregister();
 
-//       Toast.makeText(DetectorActivity.this,String.valueOf(list),Toast.LENGTH_LONG).show();
-     }
+
     }
   });
+
 
 }
 
@@ -1101,23 +1131,16 @@ public void Check(Bitmap bitmap){
 }
 
 
-public void sendAttenDanceToFirebase(String ID,String Date,String Id,String Temperature){
-    FirebaseFirestore db= FirebaseFirestore.getInstance();
+public void sendAttenDanceToFirebase(String ID,String Date,String Name,String Temperature){
+  db = FirebaseFirestore.getInstance();
     location_txt= dropdown.getSelectedItem().toString();
     String Status="OK";
-    successToast(location_txt);
     String hour = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-    Map<String, Object> user = new HashMap<>();
-    ArrayList<String> info= new ArrayList<>(Arrays.asList(ID,Id,Status,Temperature,Date,location_txt,hour));
-    user.put(Id+location_txt+hour,info);
-    db.collection(currentuser).document(Date).set(user,SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
-      @Override
-      public void onComplete(@NonNull Task<Void> task) {
-        if (task.isSuccessful()){
-          successToast("Attendance Checked!");
-        }
-      }
-    });
+  Present_student student = new Present_student(ID,Name,Status,Temperature,Date,location_txt,hour);
+  Map<String, Object> user1 = new HashMap<>();
+  Map<String, Object> user3 = new HashMap<>();
+  ArrayList<Object> user2= new ArrayList<>();
+    db.collection(currentuser).document("Attendance").update(location_txt+"."+Date,FieldValue.arrayUnion(student));
 }
 
 
