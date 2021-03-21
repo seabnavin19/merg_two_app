@@ -26,6 +26,10 @@ public class Present_student {
         this.Time=Time;
     }
 
+    public String getID() {
+        return ID;
+    }
+
     public String getname() {
         return Name;
     }
@@ -49,5 +53,6 @@ public class Present_student {
     public String getTime() {
         return Time;
     }
+
 
 }

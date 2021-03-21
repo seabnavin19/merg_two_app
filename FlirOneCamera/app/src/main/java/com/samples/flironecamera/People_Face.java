@@ -1,9 +1,12 @@
 package com.samples.flironecamera;
 
+import android.graphics.Bitmap;
+
 import java.util.ArrayList;
 
 public class People_Face {
    private String Id;
+   private Bitmap Image;
     private String Name;
     private float distance;
     private ArrayList<Float> face;
@@ -15,6 +18,7 @@ public class People_Face {
         this.distance=distance;
         this.face=face;
         this.title=title;
+
     }
 
     public String getName() {
@@ -36,4 +40,6 @@ public class People_Face {
     public String getTitle() {
         return title;
     }
+
+
 }

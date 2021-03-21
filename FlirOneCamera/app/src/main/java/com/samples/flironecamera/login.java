@@ -6,10 +6,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -24,6 +27,16 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.Properties;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 public class login extends AppCompatActivity {
     private FirebaseAuth auth;
     private Button login_button;
@@ -31,6 +44,12 @@ public class login extends AppCompatActivity {
     private EditText password;
     private Button without_acc;
     ProgressDialog progressDialog;
+
+
+    private Context context;
+    private Session session;
+    private MimeMessage messages;
+    private String email_send="seabnavinnavin@gmail.com";
 
 
     @Override
@@ -68,8 +87,14 @@ public class login extends AppCompatActivity {
                 i.putExtra("Email","No");
                 startActivity(i);
                 finish();
+
+
+
             }
         });
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
     }
     private void loginUser(String email,String pass){
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(pass)){
@@ -100,6 +125,7 @@ public class login extends AppCompatActivity {
                 }
             });
         }
+
 
     }
     private void Alert_Fail(){

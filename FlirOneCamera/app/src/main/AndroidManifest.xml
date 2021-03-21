@@ -6,6 +6,7 @@
     <!-- some hw might not support Usb Host mode so it's recommended to add this -->
     <!-- <uses-feature android:name="android.hardware.usb.host" /> -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -40,7 +41,7 @@
         </activity>
         <activity
             android:name=".DetectorActivity"
-            android:screenOrientation="portrait">
+            android:screenOrientation="reversePortrait">
 
             <!-- <intent-filter> -->
             <!-- <action android:name="android.intent.action.MAIN" /> -->

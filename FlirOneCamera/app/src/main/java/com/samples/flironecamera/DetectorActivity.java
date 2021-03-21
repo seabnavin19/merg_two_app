@@ -35,7 +35,9 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
+import android.text.Layout;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
@@ -52,6 +54,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -59,6 +63,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -88,6 +93,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.google.rpc.context.AttributeContext;
 import com.samples.flironecamera.customview.OverlayView;
 import com.samples.flironecamera.customview.OverlayView.DrawCallback;
 import com.samples.flironecamera.env.BorderedText;
@@ -96,6 +102,8 @@ import com.samples.flironecamera.env.Logger;
 import com.samples.flironecamera.tflite.SimilarityClassifier;
 import com.samples.flironecamera.tflite.TFLiteObjectDetectionAPIModel;
 import com.samples.flironecamera.tracking.MultiBoxTracker;
+
+import io.grpc.internal.SharedResourceHolder;
 
 
 /**
@@ -182,7 +190,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private String currentuser;
   public  int Attendance;
   private MediaPlayer mp;
-  private MediaPlayer alert;
+//  private MediaPlayer alert;
 
 
   //to hide this 2 button
@@ -195,6 +203,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private  EditText location;
   private String location_txt="three";
   private FirebaseFirestore db;
+  private Object MutableLiveData;
 
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
@@ -212,6 +221,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Button addButton;
   private Spinner dropdown;
 
+
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -221,6 +232,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       Attendance=0;
     }
     else {
+
 
       dropdown = findViewById(R.id.spinner1);
 
@@ -238,7 +250,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
           location_txt= dropdown.getSelectedItem().toString();
-          successToast("mother");
+//          successToast("mother");
           RegisterFaceFromFireBase();
         }
 
@@ -252,7 +264,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       Log.d("user",currentuser);
     }
     mp=MediaPlayer.create(this,R.raw.temprature_checked);
-    alert=MediaPlayer.create(this,R.raw.alert);
+//    alert=MediaPlayer.create(this,R.raw.alert);
     fabAdd = findViewById(R.id.fab_add);
     connectButton=findViewById(R.id.connect_to_flir);
     disconnectButton=findViewById(R.id.disconnect_flir);
@@ -563,12 +575,33 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       @Override
       public void onClick(DialogInterface dlg, int i) {
           String name = etName.getText().toString();
-          detector.register(name,rec);
+          String ID_i= id.getText().toString();
+//          detector.register(name,rec);
           NameFromFirebase=name;
           ID=id.getText().toString();
           if (name.isEmpty()) {
               return;
           }
+        ArrayList<Float> n= new ArrayList<>();
+        HashMap<String,Object> user= new HashMap<>();
+        user.put("Id",rec.getId());
+        user.put("Distance",rec.getDistance());
+        user.put("Title",rec.getTitle());
+        user.put("Name",name);
+        user.put("ID",ID_i);
+
+        int p=0;
+        for (float[] arr :rec.getExtra()){
+          for (float j : arr){
+            n.add(j);
+          }
+          user.put("n"+ p,n);
+          p+=1;
+        }
+        user.put("Extra",n);
+        userIDFace.put(ID_i,name);
+        AllFaceFromDataBase.add(user);
+
           builder.setCancelable(false);
           progressDialog= new ProgressDialog(DetectorActivity.this);
           progressDialog.setMessage("Uploading Image To DataBase..!");
@@ -612,6 +645,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   }
   int take=1;
+  int Noattendance=0;
+  int check=0;
+  int prepare=0;
 
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
 
@@ -655,17 +691,23 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     boolean saved = false;
     Face facea=faces.get(0);
     final RectF boundingBoxt = new RectF(facea.getBoundingBox());
-    if (Attendance==0){
-      if ((boundingBoxt.left-boundingBoxt.right)<-150.0 && (take==1)){
-        if (temperatureData==null){
-          temperatureData="0";
-        }
-        Float temp=Float.parseFloat(temperatureData);
-        temperatures.add(temperatureData);
+    if ((boundingBoxt.left-boundingBoxt.right)<-90.0 && (take==1)){
+      if (temperatureData==null){
+        temperatureData="0";
       }
-      if (temperatures.size()>=10){
+      temperatures.add(temperatureData);
+      Log.d("kkkk",String.valueOf(temperatures.size()));
+    }
+    if (Attendance==0 || Noattendance==1){
+
+      if (Noattendance==0){
+        temperatures.clear();
+      }
+      if (temperatures.size()>=5 && check==1){
         take=0;
+        IdFace.clear();
         TemperatureDialog();
+        prepare=0;
       }
     }
 
@@ -733,6 +775,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             confidence = conf;
             label = result.getTitle();
             if (result.getId().equals("0")) {
+              Noattendance=0;
               color = Color.GREEN;
 //              Float temp= Float.parseFloat(temperatureData);
               if (temperatureData==null){
@@ -748,6 +791,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             }
             else {
               color = Color.RED;
+            }
+          }
+          else {
+            prepare+=1;
+            Log.d("kkkk","pre"+String.valueOf(prepare));
+            if (prepare>=5){
+              Noattendance=1;
+              prepare=0;
             }
           }
 
@@ -822,6 +873,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
+        check=1;
         LoadFaceFromFirebase();
       }
     });
@@ -832,6 +884,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     builder.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
+        check=1;
 
       }
     });
@@ -855,8 +908,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       ArrayList<Float> ArrayListExtra= (ArrayList<Float>) document.get("Extra");
       float[] arr0= new float[ArrayListExtra.size()];
       int i=0;
-      String Name=document.get("Name").toString();
-      userIDFace.put(Name,document.get("ID").toString());
+      String Name=document.get("ID").toString();
+
 
       for (int k=0;k<ArrayListExtra.size();k++){
         arr0[k]= Float.parseFloat(String.valueOf(ArrayListExtra.get(k)));
@@ -879,7 +932,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     user.put("Id_image",NewPerson.getId());
     user.put("distance",NewPerson.getDistance());;
     user.put("Name",NameFromFirebase);
+//    user.put("Image",NewPerson.getCrop());
     user.put("ID",ID);
+
 //    user.put("crop", Blob.fromBytes(getBytes(navin.getCrop())));
     int p=0;
     for (float[] i:NewPerson.getExtra()){
@@ -891,12 +946,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
     location_txt= dropdown.getSelectedItem().toString();
     People_Face people_face = new People_Face(NewPerson.getId(),NameFromFirebase,NewPerson.getDistance(),n,NewPerson.getTitle());
-    db.collection(currentuser).document("Face").update(location_txt+"."+ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
+    db.collection(currentuser).document("Face").update(ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
       @Override
       public void onSuccess(Void aVoid) {
         progressDialog.dismiss();
       }
+
     });
+
 
   }
 
@@ -906,34 +963,30 @@ public void RegisterFaceFromFireBase() {
   db.collection(currentuser).document("Face").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
     @Override
     public void onSuccess(DocumentSnapshot documentSnapshot) {
-      if (documentSnapshot.get(location_txt)!=null){
-        HashMap<String,Object> me= (HashMap<String, Object>) documentSnapshot.get(location_txt);
-        List<Map<String, Object>> usersReplace = new ArrayList<>();
-        Log.d("kkkkk",me.toString());
-        for (Map.Entry element: me.entrySet()){
-           Map<String, Object> user = new HashMap<>();
-           String key = (String) element.getKey();
-           HashMap<String,Object> by_key= (HashMap<String, Object>) me.get(key);
-           user.put("Id",by_key.get("id"));
-           user.put("Distance",by_key.get("distance"));
-           user.put("Title",by_key.get("title"));
-           user.put("Extra",by_key.get("face"));
-           user.put("Name",by_key.get("name"));
-           user.put("ID",key);
-           usersReplace.add(user);
-//           Log.d("kkkkk",user.toString());
+      Map<String, Object> map = documentSnapshot.getData();
+      List<Map<String, Object>> usersReplace = new ArrayList<>();
+      if (map != null) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+          HashMap<String,Object> user= new HashMap<>();
+          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
+          user.put("Id",by_key.get("id"));
+          user.put("Distance",by_key.get("distance"));
+          user.put("Title",by_key.get("title"));
+          user.put("Extra",by_key.get("face"));
+          user.put("Name",by_key.get("name"));
+          user.put("ID",entry.getKey());
+          usersReplace.add(user);
+          userIDFace.put(entry.getKey(),by_key.get("name").toString());
+//          successToast(user.get("ID").toString());
 
-         }
+        }
         AllFaceFromDataBase=usersReplace;
-        successToast(String.valueOf(usersReplace.size()));
 
       }
       else {
-        AllFaceFromDataBase = new ArrayList<>();
-        Log.d("kkkkk",location_txt);
-
+        AllFaceFromDataBase= new ArrayList<>();
       }
-      detector.unregister();
+
 
 
     }
@@ -944,6 +997,8 @@ public void RegisterFaceFromFireBase() {
 
 //private ImageView im;
 public void GotoAddFace(View view){
+    check=0;
+    successToast(String.valueOf(check));
     fabAdd.setVisibility(View.VISIBLE);
     backButton.setVisibility(View.VISIBLE);
     bottomSheetLayout.setVisibility(View.INVISIBLE);
@@ -971,6 +1026,7 @@ public void GotoAddFace(View view){
 
 public void GoToAttendance(View view){
     LoadFaceFromFirebase();
+    check=1;
     backButton.setVisibility(View.INVISIBLE);
     fabAdd.setVisibility(View.INVISIBLE);
     bottomSheetLayout.setVisibility(View.VISIBLE);
@@ -985,8 +1041,8 @@ public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<St
 
 
 
-    if (Id.size()==1){
-      result.put("Id",Id.get(0));
+    if (Id.size()>=1){
+      result.put("Id",Id.get(Id.size()-1));
       Float sum=0f;
       Float average;
 
@@ -1030,9 +1086,7 @@ public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<St
 
 // alert when the application generate the temperature
 public void InfoDialog(){
-
   String date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-
   AlertDialog.Builder builder = new AlertDialog.Builder(this);
   LayoutInflater inflater = getLayoutInflater();
   View dialogLayout = inflater.inflate(R.layout.info_dialog, null);
@@ -1044,24 +1098,62 @@ public void InfoDialog(){
   builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
     @Override
     public void onClick(DialogInterface dialog, int which) {
+      check=1;
       Allow_FaceDetect=true;
       AddedFace=0;
       IdFace.clear();
       temperatures.clear();
       if (Attendance!=0){
-          sendAttenDanceToFirebase(userIDFace.get(resultMap.get("Id")),date,resultMap.get("Id"),resultMap.get("Temp"));
+          sendAttenDanceToFirebase(resultMap.get("Id"),date,userIDFace.get(resultMap.get("Id")),resultMap.get("Temp"));
+          successToast("Checked");
       }
 
     }
+
+
   });
   if (Attendance!=0){
-      name.setText("Name: "+resultMap.get("Id"));
+      name.setText("Name: "+userIDFace.get(resultMap.get("Id")));
+
   }
-  temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")));
+  if (resultMap.get("Temp").equals("0.0")){
+    temp.setTextColor(Color.RED);
+    temp.setText("Not Properly Checked");
+  }
+  if (Float.parseFloat(resultMap.get("Temp"))>=37.5){
+    sendMail("Name: "+userIDFace.get(resultMap.get("Id"))+"\n"+"Temperature: "+resultMap.get("Temp"));
+  }
+  else {
+    temp.setTextColor(Color.GREEN);
+    temp.setTextSize(30);
+    temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")));
+  }
+
   dateText.setText("Date: "+date);
   builder.setView(dialogLayout);
   builder.setCancelable(false);
-  builder.show();
+  final AlertDialog alertDialog = builder.create();
+  alertDialog.show();
+
+
+  Handler mHandler = new Handler();
+  mHandler.postDelayed(new Runnable() {
+    @Override
+    public void run() {
+      if (alertDialog.isShowing()){
+        alertDialog.dismiss();
+        check=1;
+        Allow_FaceDetect=true;
+        AddedFace=0;
+        IdFace.clear();
+        temperatures.clear();
+        if (Attendance!=0 && !resultMap.get("Temp").equals("0.0")){
+          sendAttenDanceToFirebase(resultMap.get("Id"),date,userIDFace.get(resultMap.get("Id")),resultMap.get("Temp"));
+          successToast("Checked");
+        }
+      }
+    }
+  },1000);
 
 
 
@@ -1070,10 +1162,12 @@ public void InfoDialog(){
 
 
  private  void TemperatureDialog() {
+    check=0;
+    Noattendance=0;
     ArrayList<String> id= new ArrayList<>();
     id.add("go");
+
     HashMap<String,String> result = StoreAttendance(id,temperatures);
-     temperatures.clear();
      String date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
      AlertDialog.Builder builder = new AlertDialog.Builder(this);
      LayoutInflater inflater = getLayoutInflater();
@@ -1085,20 +1179,47 @@ public void InfoDialog(){
          @Override
          public void onClick(DialogInterface dialog, int which) {
              take=1;
+             check=1;
              temperatures.clear();
-             alert.stop();
-             alert=MediaPlayer.create(DetectorActivity.this,R.raw.alert);
+             Noattendance=0;
+             prepare=0;
+//             alert.stop();
+//             alert=MediaPlayer.create(DetectorActivity.this,R.raw.alert);
          }
      });
      name.setText("Normal");
      dateText.setText(date);
-     temp.setText(result.get("Temp"));
-     builder.setView(dialogLayout);
-     builder.show();
-     if (Float.parseFloat(result.get("Temp"))==0){
-         alert.start();
 
+     if (result.get("Temp").equals("0.0")){
+       temp.setTextColor(Color.RED);
+       temp.setText("Not Properly Check");
      }
+     else {
+       temp.setTextSize(40);
+       temp.setText(result.get("Temp"));
+     }
+
+     builder.setView(dialogLayout);
+     builder.setCancelable(false);
+     final AlertDialog alertDialog = builder.create();
+      alertDialog.show();
+   new Handler().postDelayed(new Runnable() {
+     @Override
+     public void run() {
+       if (alertDialog.isShowing()){
+         alertDialog.dismiss();
+         take=1;
+         check=1;
+         temperatures.clear();
+         Noattendance=0;
+         prepare=0;
+       }
+     }
+   }, 1000);
+//     if (Float.parseFloat(result.get("Temp"))>=37.5){
+//         alert.start();
+//
+//     }
 //     temp.setText(stringFourDigits(String.valueOf(avg)));
 }
 
@@ -1111,9 +1232,11 @@ public void Check(Bitmap bitmap){
     AddedFace+=1;
 
   }
+  Log.d("kkk",String.valueOf(IdFace.size()));
+  Log.d("kkk",String.valueOf(AddedFace));
 
   // we need to have only one face inorder to generate the temperature
-  if (AddedFace==9 && IdFace.size()==1){
+  if (AddedFace>=3 && check==1){
     Allow_FaceDetect=false;
     AddedFace=0;
     ArrayList<String> FaceRepresent= new ArrayList<>(IdFace);
@@ -1121,13 +1244,15 @@ public void Check(Bitmap bitmap){
     resultMap=StoreAttendance(FaceRepresent,temperatures);
     temperatures.clear();
     IdFace.clear();
+    check=0;
     InfoDialog();
   }
-  if (AddedFace==5 && IdFace.size()>1){
-    IdFace.clear();
-    temperatures.clear();
-    AddedFace=0;
-  }
+
+//  if (AddedFace==5 && IdFace.size()>1){
+//    IdFace.clear();
+//    temperatures.clear();
+//    AddedFace=0;
+//  }
 }
 
 
@@ -1137,10 +1262,8 @@ public void sendAttenDanceToFirebase(String ID,String Date,String Name,String Te
     String Status="OK";
     String hour = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
   Present_student student = new Present_student(ID,Name,Status,Temperature,Date,location_txt,hour);
-  Map<String, Object> user1 = new HashMap<>();
-  Map<String, Object> user3 = new HashMap<>();
-  ArrayList<Object> user2= new ArrayList<>();
     db.collection(currentuser).document("Attendance").update(location_txt+"."+Date,FieldValue.arrayUnion(student));
+
 }
 
 
@@ -1163,16 +1286,19 @@ public void signOut(View view){
     Intent i = new Intent(DetectorActivity.this,login.class);
     startActivity(i);
     finish();
+
 }
 
 
-// to modified the location
-  public void InputLocation(View view){
-    String locate=location.getText().toString();
-    location_txt= locate;
-    successToast("Change location to "+ location_txt);
+private void sendMail(String message){
+    SendMail sm= new SendMail(this,"seabnavinnavin@gmail.com","Temperature Warning",message);
+    sm.execute();
+}
 
-  }
+// to modified the location
+
+
+
 
 
 
