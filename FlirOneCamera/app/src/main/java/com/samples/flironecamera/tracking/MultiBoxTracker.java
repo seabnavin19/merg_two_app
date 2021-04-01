@@ -28,6 +28,8 @@ import android.graphics.RectF;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.util.TypedValue;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -38,6 +40,7 @@ import com.samples.flironecamera.tflite.SimilarityClassifier.Recognition;
 
 /** A tracker that handles non-max suppression and matches existing objects to new detections. */
 public class MultiBoxTracker {
+  private HashMap<String,String> Idname;
   private static final float TEXT_SIZE_DIP = 18;
   private static final float MIN_SIZE = 16.0f;
   private static final int[] COLORS = {
@@ -154,7 +157,7 @@ public class MultiBoxTracker {
 
       final String labelString =
               !TextUtils.isEmpty(recognition.title)
-              ? String.format("%s %s", recognition.title, strConfidence)
+              ? String.format("%s ",getIdname().get(recognition.title))
               : strConfidence;
       Name=recognition.title;
 
@@ -225,5 +228,13 @@ public class MultiBoxTracker {
     float detectionConfidence;
     int color;
     String title;
+  }
+
+  public void setIdname(HashMap<String, String> idname) {
+    Idname = idname;
+  }
+
+  public HashMap<String, String> getIdname() {
+    return Idname;
   }
 }

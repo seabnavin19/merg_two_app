@@ -10,17 +10,15 @@
  * ******************************************************************/
 package com.samples.flironecamera;
 
-import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.graphics.Typeface;
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,23 +26,29 @@ import com.flir.thermalsdk.ErrorCode;
 import com.flir.thermalsdk.androidsdk.BuildConfig;
 import com.flir.thermalsdk.androidsdk.ThermalSdkAndroid;
 import com.flir.thermalsdk.androidsdk.live.connectivity.UsbPermissionHandler;
+import com.flir.thermalsdk.image.Point;
 import com.flir.thermalsdk.live.CommunicationInterface;
 import com.flir.thermalsdk.live.Identity;
 import com.flir.thermalsdk.live.connectivity.ConnectionStatusListener;
 import com.flir.thermalsdk.live.discovery.DiscoveryEventListener;
 import com.flir.thermalsdk.log.ThermalLog;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 //import com.samples.flironecamera.helpers.GraphicOverlay;
 //import com.samples.flironecamera.helpers.RectOverlay;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import androidx.appcompat.app.ActionBar;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 /**
  * Sample application for scanning a FLIR ONE or a built in emulator
@@ -61,9 +65,13 @@ public class MainActivity extends AppCompatActivity {
 
     //Handles Android permission for eg Network
     public PermissionHandler permissionHandler;
+    private FaceDetector faceDetectors;
+    private Handler handler ;
+    private Runnable runnable;
+
 
     //Handles network camera operations
-    private CameraHandler cameraHandler;
+    public CameraHandler cameraHandler;
 
     private Identity connectedIdentity = null;
     //private TextView connectionStatus;
@@ -77,8 +85,13 @@ public class MainActivity extends AppCompatActivity {
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
 
 //    GraphicOverlay graphicOverlay;
+    public Bitmap mybitmap=null;
 
     public   String temperatureData = null;
+    private TextView text_temp;
+
+
+
 
     public void getRe(View view) {
         Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
@@ -99,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         ThermalLog.LogLevel enableLoggingInDebug;
         if (BuildConfig.DEBUG) enableLoggingInDebug = ThermalLog.LogLevel.DEBUG;
         else enableLoggingInDebug = ThermalLog.LogLevel.NONE;
+
         //ThermalSdkAndroid has to be initiated from a Activity with the Application Context to prevent leaking Context,
         // and before ANY using any ThermalSdkAndroid functions
         //ThermalLog will show log from the Thermal SDK in standards android log framework
@@ -107,8 +121,21 @@ public class MainActivity extends AppCompatActivity {
         permissionHandler = new PermissionHandler(showMessage, MainActivity.this);
 
         cameraHandler = new CameraHandler();
+        text_temp=findViewById(R.id.test_text);
 
         setupViews();
+
+        FaceDetectorOptions options =
+                new FaceDetectorOptions.Builder()
+                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                        .setContourMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+                        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+                        .build();
+
+        FaceDetector detector = FaceDetection.getClient(options);
+        faceDetectors=detector;
+        Bitmap myLogo = ((BitmapDrawable)getResources().getDrawable(R.drawable.logo)).getBitmap();
+        mybitmap=myLogo;
         this.startDiscovery();
     }
 
@@ -199,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private int running=0;
     private UsbPermissionHandler.UsbPermissionListener permissionListener = new UsbPermissionHandler.UsbPermissionListener() {
         @Override
         public void permissionGranted(Identity identity) {
@@ -249,6 +277,7 @@ public class MainActivity extends AppCompatActivity {
 //                    descFlirOneStatus.setText("");
             });
         }).start();
+
     }
 
     /**
@@ -306,8 +335,8 @@ public class MainActivity extends AppCompatActivity {
         public void images(FrameDataHolder dataHolder) {
 
             runOnUiThread(() -> {
-                //msxImage.setImageBitmap(dataHolder.dcBitmap);
-                msxImage.setImageBitmap(dataHolder.msxBitmap);
+                msxImage.setImageBitmap(dataHolder.dcBitmap);
+//                msxImage.setImageBitmap(dataHolder.msxBitmap);
             });
         }
 
@@ -324,15 +353,56 @@ public class MainActivity extends AppCompatActivity {
 
             runOnUiThread(() -> {
                 Log.d(TAG,"framebuffer size:"+framesBuffer.size());
+
                 FrameDataHolder poll = framesBuffer.poll();
                 assert poll != null;
                 //msxImage.setImageBitmap(poll.msxBitmap);
                 msxImage.setImageBitmap(poll.msxBitmap);
                 temperatureData = stringFourDigits(cameraHandler.getLogData());
-//
+//                Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
+                mybitmap=poll.dcBitmap;
+//                detectFace();
             });
         }
+
     };
+
+    public void detectFace() {
+
+        InputImage image = InputImage.fromBitmap(mybitmap, 0);
+        faceDetectors.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+
+            @Override
+            public void onSuccess(List<Face> faces) {
+                if (faces.size() >= 1) {
+                    Face face = faces.get(0);
+
+                    Point point = new Point(face.getBoundingBox().left+10, (int) (face.getBoundingBox().top-10));
+                    cameraHandler.setWidth_height(point);
+//                   temperatureData = stringFourDigits(cameraHandler.getLogData());
+                    text_temp.setPadding(200,0,0,0);
+                    Toast.makeText(MainActivity.this ,cameraHandler.getPoint()+" ",Toast.LENGTH_LONG).show();
+
+                }
+                else {
+                    Point point = null;
+                    cameraHandler.setWidth_height(point);
+
+
+
+                }
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                com.flir.thermalsdk.image.Point point = null;
+                cameraHandler.setWidth_height(point);
+
+            }
+        });
+    }
+
 
 
 

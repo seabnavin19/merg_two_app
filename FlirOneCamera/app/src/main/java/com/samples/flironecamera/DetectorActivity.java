@@ -16,6 +16,7 @@
 
 package com.samples.flironecamera;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -49,6 +50,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -205,6 +207,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private FirebaseFirestore db;
   private Object MutableLiveData;
 
+  private TextView faceLocation;
+
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
   public String stringFourDigits(String str) {
@@ -220,30 +224,72 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private List<Map<String,Object>> AllFaceFromDataBase;
   private Button addButton;
   private Spinner dropdown;
+  private ArrayList<String> items;
 
+  private ArrayList<String> em= new ArrayList<>();
 
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    Intent i = getIntent();
-    String email= i.getStringExtra("Email");
+    final Intent[] i = {getIntent()};
+    String email= i[0].getStringExtra("Email");
+    faceLocation=findViewById(R.id.FaceText);
     if (email.equals("No")){
       Attendance=0;
     }
     else {
 
-
-      dropdown = findViewById(R.id.spinner1);
-
-      String[] items = new String[]{"1", "2", "three"};
-
-      ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
-
-      dropdown.setAdapter(adapter);
-
       AskingDialog();
       currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
+      items= new ArrayList<>();
+      dropdown=findViewById(R.id.spinner1);
+      db=FirebaseFirestore.getInstance();
+      db.collection(currentuser).document("Location").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        @Override
+        public void onSuccess(DocumentSnapshot documentSnapshot) {
+          Map<String,Object> locationMap= documentSnapshot.getData();
+          if (documentSnapshot.exists()){
+
+            for (Map.Entry<String,Object> location_name:locationMap.entrySet()){
+              Map<String,Object> loc= (Map<String, Object>) location_name.getValue();
+              items.add(loc.get("Name").toString());
+            }
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
+
+            dropdown.setAdapter(adapter);
+
+          }
+          else {
+            String[] SpinnerArray= new String[]{"NoLocation"};
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, SpinnerArray);
+
+
+          }
+
+
+        }
+      });
+      db.collection(currentuser).document("Email").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        @Override
+        public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+          if (documentSnapshot.exists()){
+
+            Map<String,Object> emails= documentSnapshot.getData();
+            for (Map.Entry<String,Object> user_name:emails.entrySet()){
+              Map<String,Object> mail= (Map<String, Object>) user_name.getValue();
+              em.add(mail.get("email").toString());
+            }
+
+            successToast("Registered Face");
+          }
+
+        }
+      });
+//
+
 
 
       dropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -330,6 +376,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     borderedText.setTypeface(Typeface.MONOSPACE);
 
     tracker = new MultiBoxTracker(this);
+//    final ActionBar.LayoutParams layoutparams= (ActionBar.LayoutParams) faceLocation.getLayoutParams();
+//    layoutparams.setMargins(size.getWidth()/2,size.getHeight()/2,size.getWidth()/2,size.getHeight()/2);
 
 
     try {
@@ -468,8 +516,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         new Runnable() {
                           @Override
                           public void run() {
-
                               onFacesDetected(currTimestamp, faces, addPending);
+
                               addPending = false;
 
                           }
@@ -477,6 +525,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               }
 
             });
+
 
 
   }
@@ -690,6 +739,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     final Canvas cvFace = new Canvas(faceBmp);
     boolean saved = false;
     Face facea=faces.get(0);
+    if (take==1){
+      detectFace();
+    }
     final RectF boundingBoxt = new RectF(facea.getBoundingBox());
     if ((boundingBoxt.left-boundingBoxt.right)<-90.0 && (take==1)){
       if (temperatureData==null){
@@ -703,16 +755,17 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       if (Noattendance==0){
         temperatures.clear();
       }
-      if (temperatures.size()>=5 && check==1){
+      if (temperatures.size()>=3 && check==1){
         take=0;
         IdFace.clear();
         TemperatureDialog();
         prepare=0;
       }
     }
+    ArrayList<Face> faces1= new ArrayList<>();
+    faces1.add(faces.get(0));
 
-
-    for (Face face : faces) {
+    for (Face face : faces1) {
 
       LOGGER.i("Running detection on face " + currTimestamp);
       //results = detector.recognizeImage(croppedBitmap);
@@ -771,7 +824,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          }
 
           float conf = result.getDistance();
-          if (conf < 0.65f) {
+          if (conf < 0.69f) {
             confidence = conf;
             label = result.getTitle();
             if (result.getId().equals("0")) {
@@ -875,6 +928,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       public void onClick(DialogInterface dialog, int which) {
         check=1;
         LoadFaceFromFirebase();
+
+//        ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
+        tracker.setIdname(userIDFace);
+        Log.d("tracker",userIDFace.toString());
+//
+//        dropdown.setAdapter(adapter);
       }
     });
 //    builder.setCanceledOnTouchOutside(false);
@@ -998,7 +1057,6 @@ public void RegisterFaceFromFireBase() {
 //private ImageView im;
 public void GotoAddFace(View view){
     check=0;
-    successToast(String.valueOf(check));
     fabAdd.setVisibility(View.VISIBLE);
     backButton.setVisibility(View.VISIBLE);
     bottomSheetLayout.setVisibility(View.INVISIBLE);
@@ -1027,6 +1085,7 @@ public void GotoAddFace(View view){
 public void GoToAttendance(View view){
     LoadFaceFromFirebase();
     check=1;
+    tracker.setIdname(userIDFace);
     backButton.setVisibility(View.INVISIBLE);
     fabAdd.setVisibility(View.INVISIBLE);
     bottomSheetLayout.setVisibility(View.VISIBLE);
@@ -1087,6 +1146,7 @@ public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<St
 // alert when the application generate the temperature
 public void InfoDialog(){
   String date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+  String hour = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
   AlertDialog.Builder builder = new AlertDialog.Builder(this);
   LayoutInflater inflater = getLayoutInflater();
   View dialogLayout = inflater.inflate(R.layout.info_dialog, null);
@@ -1121,7 +1181,10 @@ public void InfoDialog(){
     temp.setText("Not Properly Checked");
   }
   if (Float.parseFloat(resultMap.get("Temp"))>=37.5){
-    sendMail("Name: "+userIDFace.get(resultMap.get("Id"))+"\n"+"Temperature: "+resultMap.get("Temp"));
+    temp.setTextColor(Color.RED);
+    temp.setTextSize(30);
+    temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")));
+    sendMail("Name: "+userIDFace.get(resultMap.get("Id"))+"\n"+"Temperature: "+resultMap.get("Temp")+"\n"+"Location: "+location_txt+"\n"+"Check Time: "+hour);
   }
   else {
     temp.setTextColor(Color.GREEN);
@@ -1153,7 +1216,7 @@ public void InfoDialog(){
         }
       }
     }
-  },1000);
+  },2000);
 
 
 
@@ -1215,7 +1278,7 @@ public void InfoDialog(){
          prepare=0;
        }
      }
-   }, 1000);
+   }, 1500);
 //     if (Float.parseFloat(result.get("Temp"))>=37.5){
 //         alert.start();
 //
@@ -1291,8 +1354,12 @@ public void signOut(View view){
 
 
 private void sendMail(String message){
-    SendMail sm= new SendMail(this,"seabnavinnavin@gmail.com","Temperature Warning",message);
+  for (String email :em){
+    SendMail sm = new SendMail(this,email,"Temperature Warning",message);
     sm.execute();
+  }
+
+
 }
 
 // to modified the location

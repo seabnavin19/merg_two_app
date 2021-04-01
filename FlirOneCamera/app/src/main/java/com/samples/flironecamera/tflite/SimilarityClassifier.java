@@ -29,6 +29,7 @@ public interface SimilarityClassifier {
   void register(String name, Recognition recognition);
   void unregister();
 
+
   List<Recognition> recognizeImage(Bitmap bitmap, boolean getExtra);
 
   void enableStatLogging(final boolean debug);
@@ -62,6 +63,7 @@ public interface SimilarityClassifier {
     private RectF location;
     private Integer color;
     private Bitmap crop;
+
 
     public Recognition(
             final String id, final String title, final Float distance, final RectF location) {

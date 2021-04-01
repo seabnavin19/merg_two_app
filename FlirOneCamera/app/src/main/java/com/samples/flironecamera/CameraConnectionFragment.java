@@ -542,7 +542,6 @@ public class CameraConnectionFragment extends Fragment {
   /** Shows an error message dialog. */
   public static class ErrorDialog extends DialogFragment {
     private static final String ARG_MESSAGE = "message";
-
     public static ErrorDialog newInstance(final String message) {
       final ErrorDialog dialog = new ErrorDialog();
       final Bundle args = new Bundle();

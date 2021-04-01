@@ -68,6 +68,9 @@ class CameraHandler {
     private String tempData = null;
     private StreamDataListener streamDataListener;
 
+    private int go=0;
+    private Point point=null;
+    private int width=0;
     public interface StreamDataListener {
         void images(FrameDataHolder dataHolder);
         void images(Bitmap msxBitmap, Bitmap dcBitmap);
@@ -80,6 +83,14 @@ class CameraHandler {
     private Camera camera;
     private Bitmap imgBitmap;
 
+    public void setWidth_height(Point point){
+        this.point=point;
+
+    }
+
+    public Point getPoint() {
+        return point;
+    }
 
     public interface DiscoveryStatus {
         void started();
@@ -88,6 +99,7 @@ class CameraHandler {
 
     public CameraHandler() {
     }
+
 
     /**
      * Start discovery of USB and Emulators
@@ -229,7 +241,9 @@ class CameraHandler {
 
     /**
      * Function to process a Thermal Image and update UI
+
      */
+    int k=0;
     private final Camera.Consumer<ThermalImage> handleIncomingImage = new Camera.Consumer<ThermalImage>() {
         @Override
         public void accept(ThermalImage thermalImage) {
@@ -241,8 +255,8 @@ class CameraHandler {
             Bitmap msxBitmap;
             {
                 Objects.requireNonNull(thermalImage.getFusion()).setFusionMode(FusionMode.THERMAL_ONLY);
-                thermalImage.getFusion().setThermalFusionAbove(new ThermalValue(0, TemperatureUnit.CELSIUS));
-                thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(400, TemperatureUnit.CELSIUS));
+                thermalImage.getFusion().setThermalFusionAbove(new ThermalValue(35.6, TemperatureUnit.CELSIUS));
+                thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(42, TemperatureUnit.CELSIUS));
 
                 Palette palette = PaletteManager.getDefaultPalettes().get(0);
                 thermalImage.setPalette(palette);
@@ -250,10 +264,27 @@ class CameraHandler {
 
                 ////////////////////////////
                 // HERE!!!!!!  Get temperature at the center of thermal image
-                Double dblSpotTemperature = thermalImage.getValueAt(new Point(thermalImage.getWidth() / 2, thermalImage.getHeight() / 2));
-                Log.d("+++++++", String.valueOf(dblSpotTemperature));
+                tempData="0";
+
+                if (getPoint()!=null){
+                    try {
+                        Double dblSpotTemperature = thermalImage.getValueAt(new Point(point.x,point.y));
+                        tempData = String.valueOf(dblSpotTemperature);
+                    }catch (Exception e){
+                        tempData="0";
+                    }
+
+
+                }
+                else {
+                    tempData="0";
+                }
+
+//                Log.d("++",String.valueOf((int) (thermalImage.getHeight()-0.001))+" "+thermalImage.getHeight());
+//                Double dblSpotTemperature = thermalImage.getValueAt(new Point(thermalImage.getWidth() / 2, thermalImage.getHeight() / 2));
+//                Log.d("+++++++", String.valueOf(dblSpotTemperature));
                 msxBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
-                tempData = String.valueOf(dblSpotTemperature);
+//                tempData = String.valueOf(dblSpotTemperature);
                 //onImageProcess(msxBitmap, tempData);
                 setImg(msxBitmap);
             }

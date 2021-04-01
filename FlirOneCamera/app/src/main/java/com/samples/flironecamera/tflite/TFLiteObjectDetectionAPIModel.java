@@ -89,6 +89,7 @@ public class TFLiteObjectDetectionAPIModel
   private ByteBuffer imgData;
 
   private Interpreter tfLite;
+  private HashMap<String,String> usersId;
 
 // Face Mask Detector Output
   private float[][] output;
@@ -108,6 +109,7 @@ public class TFLiteObjectDetectionAPIModel
   public void unregister() {
     registered.clear();
   }
+
 
 
   private TFLiteObjectDetectionAPIModel() {}

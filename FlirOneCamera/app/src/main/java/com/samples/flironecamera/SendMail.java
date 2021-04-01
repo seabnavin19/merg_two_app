@@ -21,7 +21,7 @@ public class SendMail extends AsyncTask{
     String text = "Someone Have a warning temperature!";
     private String message_re;
     MimeMessage messages;
-    private ProgressDialog progressDialog;
+
     public SendMail(Context context, String email, String subject, String message){
         this.context = context;
         this.email = email;
@@ -34,13 +34,12 @@ public class SendMail extends AsyncTask{
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressDialog = ProgressDialog.show(context,"Sending message","Please wait...",false,false);
+
     }
 
     @Override
     protected void onPostExecute(Object o) {
         super.onPostExecute(o);
-        progressDialog.dismiss();
         Toast.makeText(context,"Message Sent",Toast.LENGTH_LONG).show();
     }
 
