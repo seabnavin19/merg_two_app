@@ -11,6 +11,11 @@
 package com.samples.flironecamera;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -68,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
     private FaceDetector faceDetectors;
     private Handler handler ;
     private Runnable runnable;
+    private ImageView dcimage;
+    private Bitmap mymsx;
 
 
     //Handles network camera operations
@@ -79,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView descFlirOneStatus;
 
     private ImageView msxImage;
-    private ImageView photoImage;
+//    private ImageView photoImage;
 
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
@@ -87,8 +94,10 @@ public class MainActivity extends AppCompatActivity {
 //    GraphicOverlay graphicOverlay;
     public Bitmap mybitmap=null;
 
-    public   String temperatureData = null;
-    private TextView text_temp;
+    public   String temperatureData = "0";
+
+
+    //draw line
 
 
 
@@ -121,9 +130,8 @@ public class MainActivity extends AppCompatActivity {
         permissionHandler = new PermissionHandler(showMessage, MainActivity.this);
 
         cameraHandler = new CameraHandler();
-        text_temp=findViewById(R.id.test_text);
 
-        setupViews();
+
 
         FaceDetectorOptions options =
                 new FaceDetectorOptions.Builder()
@@ -137,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
         Bitmap myLogo = ((BitmapDrawable)getResources().getDrawable(R.drawable.logo)).getBitmap();
         mybitmap=myLogo;
         this.startDiscovery();
+        setupViews(); 
     }
 
     @Override
@@ -335,8 +344,8 @@ public class MainActivity extends AppCompatActivity {
         public void images(FrameDataHolder dataHolder) {
 
             runOnUiThread(() -> {
-                msxImage.setImageBitmap(dataHolder.dcBitmap);
-//                msxImage.setImageBitmap(dataHolder.msxBitmap);
+//                msxImage.setImageBitmap(dataHolder.dcBitmap);
+                msxImage.setImageBitmap(dataHolder.msxBitmap);
             });
         }
 
@@ -356,9 +365,10 @@ public class MainActivity extends AppCompatActivity {
 
                 FrameDataHolder poll = framesBuffer.poll();
                 assert poll != null;
-                //msxImage.setImageBitmap(poll.msxBitmap);
-                msxImage.setImageBitmap(poll.msxBitmap);
-                temperatureData = stringFourDigits(cameraHandler.getLogData());
+//                msxImage.setImageBitmap(poll.msxBitmap);
+//                msxImage.setImageBitmap(poll.msxBitmap);
+//                dcimage.setImageBitmap(poll.dcBitmap);
+//                temperatureData = stringFourDigits(cameraHandler.getLogData());
 //                Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
                 mybitmap=poll.dcBitmap;
 //                detectFace();
@@ -376,17 +386,23 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(List<Face> faces) {
                 if (faces.size() >= 1) {
                     Face face = faces.get(0);
+                    
+                    final RectF boundingBoxt = new RectF(face.getBoundingBox());
+                    com.flir.thermalsdk.image.Point point = new com.flir.thermalsdk.image.Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.centerY()));
 
-                    Point point = new Point(face.getBoundingBox().left+10, (int) (face.getBoundingBox().top-10));
                     cameraHandler.setWidth_height(point);
-//                   temperatureData = stringFourDigits(cameraHandler.getLogData());
-                    text_temp.setPadding(200,0,0,0);
-                    Toast.makeText(MainActivity.this ,cameraHandler.getPoint()+" ",Toast.LENGTH_LONG).show();
+                    temperatureData = stringFourDigits(cameraHandler.getLogData());
+//                    dcimage.invalidate();
+//                    BitmapDrawable drawable = (BitmapDrawable) dcimage.getDrawable();
+//                    Bitmap bitmap = drawable.getBitmap();
+
+                    Toast.makeText(MainActivity.this ,temperatureData,Toast.LENGTH_LONG).show();
 
                 }
                 else {
-                    Point point = null;
+                    com.flir.thermalsdk.image.Point point = null;
                     cameraHandler.setWidth_height(point);
+//                    dcimage.setImageBitmap(mybitmap);
 
 
 
@@ -401,6 +417,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
     }
 
 
@@ -448,7 +466,23 @@ public class MainActivity extends AppCompatActivity {
     private void setupViews() {
 //        descFlirOneStatus = findViewById(R.id.description);
 //        graphicOverlay = findViewById(R.id.graphic_overlay);
-        msxImage = findViewById(R.id.msx_image);
+//        msxImage = findViewById(R.id.msx_image);
+//        dcimage=findViewById(R.id.msx_image1);
+//        Bitmap myLogo = ((BitmapDrawable)getResources().getDrawable(R.drawable.navin)).getBitmap();
+//        InputImage image = InputImage.fromBitmap(myLogo, 0)  ;
+//        faceDetectors.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+//            @Override
+//            public void onSuccess(List<Face> faces) {
+//                if (faces.size()>=1){
+//                    Face face=faces.get(0);
+//                    Bitmap myLogo1=drawBackground(myLogo,new RectF(face.getBoundingBox()));
+//                    dcimage.setImageBitmap(myLogo1);
+//                }
+//
+//            }
+//        }) ;
+
+
 
     }
 
@@ -460,4 +494,10 @@ public class MainActivity extends AppCompatActivity {
     public  String stringTwoDigits(String str) {
         return str.length() < 2 ? str : str.substring(0, 2);
     }
+
+
+
+
+
+
 }

@@ -207,7 +207,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private FirebaseFirestore db;
   private Object MutableLiveData;
 
-  private TextView faceLocation;
+//  private TextView faceLocation;
 
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
@@ -234,7 +234,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     super.onCreate(savedInstanceState);
     final Intent[] i = {getIntent()};
     String email= i[0].getStringExtra("Email");
-    faceLocation=findViewById(R.id.FaceText);
+//    faceLocation=findViewById(R.id.FaceText);
     if (email.equals("No")){
       Attendance=0;
     }
@@ -504,12 +504,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   Noface+=1;
                   IdFace.clear();
                   temperatures.clear();
-                  temperatureData=null;
+                  temperatureData="0";
                   return;
 
                 }
                 else {
-                  temperatureText.setText(temperatureData+" °C");
+                  if (Float.parseFloat(temperatureData)>=35){
+                    temperatureText.setText(temperatureData+" °C");
+                  }
+                  else {
+                    temperatureText.setText("Not Proper position");
+                  }
+
 
                 }
                 runInBackground(
@@ -727,7 +733,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     int targetH = portraitBmp.getHeight();
     Matrix transform = createTransform(
             sourceW,
-            sourceH,
+            sourceH,x
             targetW,
             targetH,
             sensorOrientation);
@@ -739,15 +745,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     final Canvas cvFace = new Canvas(faceBmp);
     boolean saved = false;
     Face facea=faces.get(0);
-    if (take==1){
       detectFace();
-    }
     final RectF boundingBoxt = new RectF(facea.getBoundingBox());
-    if ((boundingBoxt.left-boundingBoxt.right)<-90.0 && (take==1)){
+    if (take==1){
       if (temperatureData==null){
         temperatureData="0";
       }
-      temperatures.add(temperatureData);
+      if (Float.parseFloat(temperatureData)>=35){
+        temperatures.add(temperatureData);
+      }
+
       Log.d("kkkk",String.valueOf(temperatures.size()));
     }
     if (Attendance==0 || Noattendance==1){

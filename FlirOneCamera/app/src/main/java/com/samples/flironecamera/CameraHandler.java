@@ -67,10 +67,11 @@ class CameraHandler {
     private static final String TAG = "CameraHandler";
     private String tempData = null;
     private StreamDataListener streamDataListener;
-
+    private String Info;
     private int go=0;
     private Point point=null;
     private int width=0;
+    Bitmap dcBitmap1;
     public interface StreamDataListener {
         void images(FrameDataHolder dataHolder);
         void images(Bitmap msxBitmap, Bitmap dcBitmap);
@@ -209,6 +210,10 @@ class CameraHandler {
         return null;
     }
 
+    public String getInfo() {
+        return Info;
+    }
+
     @Nullable
     public Identity getFlirOne() {
         for (Identity foundCameraIdentity : foundCameraIdentities) {
@@ -254,7 +259,7 @@ class CameraHandler {
             //Get a bitmap with only IR data
             Bitmap msxBitmap;
             {
-                Objects.requireNonNull(thermalImage.getFusion()).setFusionMode(FusionMode.THERMAL_ONLY);
+                Objects.requireNonNull(thermalImage.getFusion()).setFusionMode(FusionMode.THERMAL_FUSION);
                 thermalImage.getFusion().setThermalFusionAbove(new ThermalValue(35.6, TemperatureUnit.CELSIUS));
                 thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(42, TemperatureUnit.CELSIUS));
 
@@ -266,10 +271,21 @@ class CameraHandler {
                 // HERE!!!!!!  Get temperature at the center of thermal image
                 tempData="0";
 
+
                 if (getPoint()!=null){
                     try {
                         Double dblSpotTemperature = thermalImage.getValueAt(new Point(point.x,point.y));
-                        tempData = String.valueOf(dblSpotTemperature);
+                        Double dblSpotTemperature1= thermalImage.getValueAt(new Point(point.x+100,point.y));
+                        Double dblSpotTemperature2 = thermalImage.getValueAt(new Point(point.x-100,point.y));
+                        Double dblSpotTemperature3= thermalImage.getValueAt(new Point(point.x,point.y-100));
+
+
+
+                        Double a= Math.max(dblSpotTemperature,dblSpotTemperature1);
+                        Double b= Math.max(a,dblSpotTemperature2);
+                        Double finalTemp=Math.max(b,dblSpotTemperature3);
+                        tempData = String.valueOf(finalTemp);
+//                        tempData = stringFourDigits(finalTemp)+" "+stringFourDigits(dblSpotTemperature3 )+" "+stringFourDigits(dblSpotTemperature4);
                     }catch (Exception e){
                         tempData="0";
                     }
@@ -288,12 +304,23 @@ class CameraHandler {
                 //onImageProcess(msxBitmap, tempData);
                 setImg(msxBitmap);
             }
-
             //Get a bitmap with the visual image, it might have different dimensions then the bitmap from THERMAL_ONLY
             Bitmap dcBitmap = BitmapAndroid.createBitmap(Objects.requireNonNull(thermalImage.getFusion().getPhoto())).getBitMap();
+//
+//
+            msxBitmap=Bitmap.createScaledBitmap(msxBitmap,thermalImage.getWidth(),thermalImage.getHeight(),false);
+            dcBitmap=Bitmap.createBitmap(dcBitmap,180,230,750,1050);
+            dcBitmap=Bitmap.createScaledBitmap(dcBitmap,thermalImage.getWidth(),thermalImage.getHeight(),false);
             streamDataListener.images(msxBitmap,dcBitmap);
+            Info=thermalImage.getWidth()+" "+ dcBitmap.getHeight();
+
         }
     };
+
+    public String stringFourDigits(Double s) {
+        String str=String.valueOf(s);
+        return str.length() < 4 ? str : str.substring(0, 4);
+    }
 
 
 
