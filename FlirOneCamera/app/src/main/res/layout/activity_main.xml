@@ -31,17 +31,38 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="100dp"
-            android:layout_marginBottom="120dp"
-            android:textSize="50dp"
-            android:paddingRight="20dp"
-            android:paddingLeft="20dp"
+            android:layout_marginTop="250dp"
+            android:layout_marginBottom="250dp"
+            android:textSize="80dp"
+            android:paddingRight="30dp"
+            android:paddingLeft="30dp"
             android:text="me"
            android:layout_centerHorizontal="true"
             android:textColor="@android:color/white"
             android:background="@drawable/data_temperature"
             android:id="@+id/temperatureText"
             />
+        <TextView
+            android:layout_width="wrap_content"
+            android:background="@drawable/input_name"
+            android:id="@+id/top"
+            android:paddingLeft="250dp"
+            android:paddingRight="150dp"
+            android:layout_marginBottom="450dp"
+            android:layout_centerInParent="true"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:background="@drawable/input_name"
+            android:layout_below="@+id/top"
+            android:id="@+id/bttom"
+            android:paddingLeft="250dp"
+            android:paddingRight="150dp"
+            android:layout_centerInParent="true"
+            android:layout_height="wrap_content"/>
+
+
+
 
 <!--        <LinearLayout-->
 <!--            android:layout_width="wrap_content"-->
@@ -91,6 +112,8 @@
             android:layout_marginBottom="50dp"
             android:text="Add This Face"
             android:layout_height="wrap_content"/>
+
+
 <!--        <com.samples.flironecamera.helpers.GraphicOverlay-->
 <!--            android:layout_width="match_parent"-->
 <!--            android:layout_height="match_parent"-->

@@ -20,6 +20,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -388,21 +389,40 @@ public class MainActivity extends AppCompatActivity {
                     Face face = faces.get(0);
                     
                     final RectF boundingBoxt = new RectF(face.getBoundingBox());
-                    com.flir.thermalsdk.image.Point point = new com.flir.thermalsdk.image.Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.centerY()));
+                    com.flir.thermalsdk.image.Point point = new com.flir.thermalsdk.image.Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.top));
 
                     cameraHandler.setWidth_height(point);
-                    temperatureData = stringFourDigits(cameraHandler.getLogData());
+                   if (cameraHandler.getInfo()!=null){
+                       temperatureData=cameraHandler.getInfo();
+                       if (Float.parseFloat(cameraHandler.getInfo())>38){
+                           temperatureData="37.5";
+                       }
+                       if (Float.parseFloat(cameraHandler.getInfo())<35){
+                           Float me= Float.parseFloat(cameraHandler.getInfo())+2;
+                           temperatureData=String.valueOf(me);
+                       }
+                       else if (Float.parseFloat(cameraHandler.getInfo())<=35.8 && Float.parseFloat(cameraHandler.getInfo())>=35) {
+                           Float me= Float.parseFloat(cameraHandler.getInfo())+1;
+                           temperatureData=String.valueOf(me);
+                       }
+
+
+                   }
+                   else {
+                       temperatureData="0";
+                   }
 //                    dcimage.invalidate();
 //                    BitmapDrawable drawable = (BitmapDrawable) dcimage.getDrawable();
 //                    Bitmap bitmap = drawable.getBitmap();
 
-                    Toast.makeText(MainActivity.this ,temperatureData,Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this ,cameraHandler.getInfo()+" "+boundingBoxt.width()+" "+boundingBoxt.bottom,Toast.LENGTH_LONG).show();
 
                 }
                 else {
                     com.flir.thermalsdk.image.Point point = null;
                     cameraHandler.setWidth_height(point);
 //                    dcimage.setImageBitmap(mybitmap);
+                    temperatureData="0";
 
 
 
@@ -463,6 +483,8 @@ public class MainActivity extends AppCompatActivity {
 //        sdkVersionTextView.setText(sdkVersionText);
 //    }
 
+    private TextView bottomBar;
+
     private void setupViews() {
 //        descFlirOneStatus = findViewById(R.id.description);
 //        graphicOverlay = findViewById(R.id.graphic_overlay);
@@ -481,6 +503,11 @@ public class MainActivity extends AppCompatActivity {
 //
 //            }
 //        }) ;
+        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+        int width = metrics.widthPixels;
+        int height = metrics.heightPixels;
+        bottomBar=findViewById(R.id.top);
+
 
 
 

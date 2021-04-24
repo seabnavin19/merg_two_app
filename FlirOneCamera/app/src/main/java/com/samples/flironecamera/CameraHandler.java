@@ -35,7 +35,10 @@ import com.flir.thermalsdk.live.streaming.ThermalImageStreamListener;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,6 +74,7 @@ class CameraHandler {
     private int go=0;
     private Point point=null;
     private int width=0;
+    private ArrayList<Double> temperatures = new ArrayList<>();
     Bitmap dcBitmap1;
     public interface StreamDataListener {
         void images(FrameDataHolder dataHolder);
@@ -259,9 +263,9 @@ class CameraHandler {
             //Get a bitmap with only IR data
             Bitmap msxBitmap;
             {
-                Objects.requireNonNull(thermalImage.getFusion()).setFusionMode(FusionMode.THERMAL_FUSION);
+                Objects.requireNonNull(thermalImage.getFusion()).setFusionMode(FusionMode.THERMAL_ONLY);
                 thermalImage.getFusion().setThermalFusionAbove(new ThermalValue(35.6, TemperatureUnit.CELSIUS));
-                thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(42, TemperatureUnit.CELSIUS));
+                thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(400, TemperatureUnit.CELSIUS));
 
                 Palette palette = PaletteManager.getDefaultPalettes().get(0);
                 thermalImage.setPalette(palette);
@@ -273,18 +277,126 @@ class CameraHandler {
 
 
                 if (getPoint()!=null){
+
                     try {
-                        Double dblSpotTemperature = thermalImage.getValueAt(new Point(point.x,point.y));
-                        Double dblSpotTemperature1= thermalImage.getValueAt(new Point(point.x+100,point.y));
-                        Double dblSpotTemperature2 = thermalImage.getValueAt(new Point(point.x-100,point.y));
-                        Double dblSpotTemperature3= thermalImage.getValueAt(new Point(point.x,point.y-100));
+//                        Double dblSpotTemperature;
+//                        Double dblSpotTemperature1;
+//                        Double dblSpotTemperature2 ;
+//                        Double dblSpotTemperature3;
+//                        Double dblSpotTemperature4;
+//                        Double dblSpotTemperature5;
+//                        Double dblSpotTemperature6;
+//                        Double dblSpotTemperature7;
+//                        Double dblSpotTemperature8;
+//
+//                        try {
+//                            dblSpotTemperature2 = thermalImage.getValueAt(new Point(point.x-100,point.y));
+//                        }catch (Exception e){dblSpotTemperature2= Double.valueOf(0.f); }
+//
+//                        try {
+//                             dblSpotTemperature = thermalImage.getValueAt(new Point(point.x,point.y));
+//                        }catch (Exception e){dblSpotTemperature=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature1 = thermalImage.getValueAt(new Point(point.x+100,point.y));
+//                        }catch (Exception e){dblSpotTemperature1=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature3 = thermalImage.getValueAt(new Point(point.x,point.y-100));
+//                        }catch (Exception e){dblSpotTemperature3=Double.valueOf(0);}
+//
+//                        try {
+//                            dblSpotTemperature4 = thermalImage.getValueAt(new Point(point.x+200,point.y));
+//                        }catch (Exception e){dblSpotTemperature4=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature5 = thermalImage.getValueAt(new Point(point.x-200,point.y));
+//                        }catch (Exception e){dblSpotTemperature5=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature6 = thermalImage.getValueAt(new Point(point.x,point.y-200));
+//                        }catch (Exception e){dblSpotTemperature6=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature7 = thermalImage.getValueAt(new Point(point.x,point.y+200));
+//                        }catch (Exception e){dblSpotTemperature7=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature3 = thermalImage.getValueAt(new Point(point.x+200,point.y-100));
+//                        }catch (Exception e){dblSpotTemperature3=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature8 = thermalImage.getValueAt(new Point(point.x,point.y+200));
+//                        }catch (Exception e){dblSpotTemperature7=Double.valueOf(0);}
+////                        try {
+////                            dblSpotTemperature8 = thermalImage.getValueAt(new Point(point.x+200,point.y+200));
+////                        }catch (Exception e){dblSpotTemperature8=Double.valueOf(0);}
+//                        try {
+//                            dblSpotTemperature8 = thermalImage.getValueAt(new Point(point.x-200,point.y+200));
+//                        }catch (Exception e){dblSpotTemperature8=Double.valueOf(0);}
+//
+//
+////                        Double dblSpotTemperature6= thermalImage.getValueAt(new Point(point.x+100,point.y));
+////                        Double dblSpotTemperature7 = thermalImage.getValueAt(new Point(point.x-100,point.y));
+//                        ArrayList<Double> temperatures= new ArrayList<>(Arrays.asList(dblSpotTemperature,dblSpotTemperature1,dblSpotTemperature2,dblSpotTemperature3,dblSpotTemperature4,dblSpotTemperature5,dblSpotTemperature6,dblSpotTemperature7,dblSpotTemperature8));
+
+                    Double dblSpotTemperature= Double.valueOf(0f);
+                    Double dblSpotTemperature1= Double.valueOf(0f);
+                    Double dblSpotTemperature2 ;
+                    Double dblSpotTemperature3;
+
+                    for (int k=0;k<=700;k+=50){
+
+                        for (int j = 0; j<=500; j+=50) {
+                            try{
+                                dblSpotTemperature=thermalImage.getValueAt(new Point(point.x+j,point.y+k));
+
+                                temperatures.add(dblSpotTemperature);
+                        }catch (Exception e){
+                                dblSpotTemperature= Double.valueOf(0);
+
+                            }
+
+                            try {
+                            dblSpotTemperature1=thermalImage.getValueAt(new Point(point.x-j,point.y+k));
+
+                            temperatures.add(dblSpotTemperature1);
+                        }catch (Exception e){
+                            dblSpotTemperature1=Double.valueOf(0);
+                        }
+                            try{
+                                dblSpotTemperature2=thermalImage.getValueAt(new Point(point.x+j,point.y-k));
+
+                                temperatures.add(dblSpotTemperature2);
+                            }catch (Exception e){
+                                dblSpotTemperature2= Double.valueOf(0);
+
+                            }
+                            try{
+                                dblSpotTemperature3=thermalImage.getValueAt(new Point(point.x-j,point.y-k));
+
+                                temperatures.add(dblSpotTemperature3);
+                            }catch (Exception e){
+                                dblSpotTemperature3= Double.valueOf(0);
+
+                            }
+//                            if (>=36.0){
+//                                tempData=stringFourDigits(dblSpotTemperature);
+//                                Info= tempData;
+//
+//                            }
 
 
+                        }
 
-                        Double a= Math.max(dblSpotTemperature,dblSpotTemperature1);
-                        Double b= Math.max(a,dblSpotTemperature2);
-                        Double finalTemp=Math.max(b,dblSpotTemperature3);
-                        tempData = String.valueOf(finalTemp);
+                        if (Collections.max(temperatures)>=36.5){
+                            Info=stringFourDigits(Collections.max(temperatures));
+                            break;
+                        }
+
+                    }
+
+                    Info=stringFourDigits(Collections.max(temperatures));
+                    temperatures=new ArrayList<>();
+//                    dblSpotTemperature=thermalImage.getValueAt(new Point(point.x+i,point.y));
+//                        Double a= Math.max(dblSpotTemperature,dblSpotTemperature1);
+//                        Double b= Math.max(a,dblSpotTemperature2);
+//                        Double finalTemp=Math.max(b,dblSpotTemperature3);
+//                        tempData = String.valueOf(Collections.max(temperatures));
+//                        Info=String.valueOf(temperatures.indexOf(Collections.max(temperatures)))+tempData;
 //                        tempData = stringFourDigits(finalTemp)+" "+stringFourDigits(dblSpotTemperature3 )+" "+stringFourDigits(dblSpotTemperature4);
                     }catch (Exception e){
                         tempData="0";
@@ -294,6 +406,7 @@ class CameraHandler {
                 }
                 else {
                     tempData="0";
+                    Info=null;
                 }
 
 //                Log.d("++",String.valueOf((int) (thermalImage.getHeight()-0.001))+" "+thermalImage.getHeight());
@@ -312,7 +425,7 @@ class CameraHandler {
             dcBitmap=Bitmap.createBitmap(dcBitmap,180,230,750,1050);
             dcBitmap=Bitmap.createScaledBitmap(dcBitmap,thermalImage.getWidth(),thermalImage.getHeight(),false);
             streamDataListener.images(msxBitmap,dcBitmap);
-            Info=thermalImage.getWidth()+" "+ dcBitmap.getHeight();
+//            tempData=thermalImage.getWidth()+" "+ dcBitmap.getHeight();
 
         }
     };
