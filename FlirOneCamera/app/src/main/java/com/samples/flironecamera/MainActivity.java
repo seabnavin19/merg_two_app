@@ -10,6 +10,10 @@
  * ******************************************************************/
 package com.samples.flironecamera;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -33,6 +37,7 @@ import com.flir.thermalsdk.androidsdk.BuildConfig;
 import com.flir.thermalsdk.androidsdk.ThermalSdkAndroid;
 import com.flir.thermalsdk.androidsdk.live.connectivity.UsbPermissionHandler;
 import com.flir.thermalsdk.image.Point;
+import com.flir.thermalsdk.image.Rectangle;
 import com.flir.thermalsdk.live.CommunicationInterface;
 import com.flir.thermalsdk.live.Identity;
 import com.flir.thermalsdk.live.connectivity.ConnectionStatusListener;
@@ -81,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     //Handles network camera operations
     public CameraHandler cameraHandler;
 
-    private Identity connectedIdentity = null;
+    public Identity connectedIdentity = null;
     //private TextView connectionStatus;
     //private TextView discoveryStatus;
     private TextView descFlirOneStatus;
@@ -95,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
 //    GraphicOverlay graphicOverlay;
     public Bitmap mybitmap=null;
 
-    public   String temperatureData = "0";
+    public   String temperatureData ="0";
 
 
     //draw line
@@ -146,7 +151,8 @@ public class MainActivity extends AppCompatActivity {
         Bitmap myLogo = ((BitmapDrawable)getResources().getDrawable(R.drawable.logo)).getBitmap();
         mybitmap=myLogo;
         this.startDiscovery();
-        setupViews(); 
+        setupViews();
+        Connect();
     }
 
     @Override
@@ -187,6 +193,13 @@ public class MainActivity extends AppCompatActivity {
 //        startActivity(i);
     }
 
+    public void Connect(){
+
+        connect(cameraHandler.getFlirOne());
+
+
+    }
+
     public void connectSimulatorOne(View view) {
         connect(cameraHandler.getCppEmulator());
     }
@@ -207,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Connect to a Camera
      */
-    private void connect(Identity identity) {
+    public void connect(Identity identity) {
         //We don't have to stop a discovery but it's nice to do if we have found the camera that we are looking for
         cameraHandler.stopDiscovery(discoveryStatusListener);
 
@@ -232,6 +245,7 @@ public class MainActivity extends AppCompatActivity {
             usbPermissionHandler.requestFlirOnePermisson(identity, this, permissionListener);
         } else {
             doConnect(identity);
+
         }
 
     }
@@ -284,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
 //            graphicOverlay.clear();
             runOnUiThread(() -> {
                     updateConnectionText(null, "DISCONNECTED");
+                    connectedIdentity=null;
 //                    descFlirOneStatus.setText("");
             });
         }).start();
@@ -378,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
 
     };
 
+
     public void detectFace() {
 
         InputImage image = InputImage.fromBitmap(mybitmap, 0);
@@ -389,20 +405,23 @@ public class MainActivity extends AppCompatActivity {
                     Face face = faces.get(0);
                     
                     final RectF boundingBoxt = new RectF(face.getBoundingBox());
-                    com.flir.thermalsdk.image.Point point = new com.flir.thermalsdk.image.Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.top));
+//                    com.flir.thermalsdk.image.Point point = new com.flir.thermalsdk.image.Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.top));
+//                    Handler handler= new Handler();
+                    Rectangle rectangle= new Rectangle((int)(boundingBoxt.left+boundingBoxt.width()/8),(int)(boundingBoxt.top+boundingBoxt.height()/8),(int)(boundingBoxt.width()),(int)(boundingBoxt.height()));
 
-                    cameraHandler.setWidth_height(point);
-                   if (cameraHandler.getInfo()!=null){
-                       temperatureData=cameraHandler.getInfo();
-                       if (Float.parseFloat(cameraHandler.getInfo())>38){
-                           temperatureData="37.5";
+//                    cameraHandler.setWidth_height(point);
+                    cameraHandler.setRectangle(rectangle);
+                   if (cameraHandler.getLogData()!=null){
+                       temperatureData=cameraHandler.getLogData();
+                       if (Float.parseFloat(cameraHandler.getLogData())>=38.6){
+                           temperatureData="0";
                        }
-                       if (Float.parseFloat(cameraHandler.getInfo())<35){
-                           Float me= Float.parseFloat(cameraHandler.getInfo())+2;
+                       if (Float.parseFloat(cameraHandler.getLogData())<35){
+                           Float me= Float.parseFloat(cameraHandler.getLogData())+1.5f;
                            temperatureData=String.valueOf(me);
                        }
-                       else if (Float.parseFloat(cameraHandler.getInfo())<=35.8 && Float.parseFloat(cameraHandler.getInfo())>=35) {
-                           Float me= Float.parseFloat(cameraHandler.getInfo())+1;
+                       else if (Float.parseFloat(cameraHandler.getLogData())<=35.8 && Float.parseFloat(cameraHandler.getLogData())>=35) {
+                           Float me= Float.parseFloat(cameraHandler.getLogData())+0.5f;
                            temperatureData=String.valueOf(me);
                        }
 
@@ -415,13 +434,14 @@ public class MainActivity extends AppCompatActivity {
 //                    BitmapDrawable drawable = (BitmapDrawable) dcimage.getDrawable();
 //                    Bitmap bitmap = drawable.getBitmap();
 
-                    Toast.makeText(MainActivity.this ,cameraHandler.getInfo()+" "+boundingBoxt.width()+" "+boundingBoxt.bottom,Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this ,cameraHandler.getInfo()+":"+cameraHandler.getLogData(),Toast.LENGTH_LONG).show();
 
                 }
                 else {
-                    com.flir.thermalsdk.image.Point point = null;
-                    cameraHandler.setWidth_height(point);
+//                    com.flir.thermalsdk.image.Point point = null;
+//                    cameraHandler.setWidth_height(point);
 //                    dcimage.setImageBitmap(mybitmap);
+                    cameraHandler.setRectangle(null);
                     temperatureData="0";
 
 
@@ -432,8 +452,9 @@ public class MainActivity extends AppCompatActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                com.flir.thermalsdk.image.Point point = null;
-                cameraHandler.setWidth_height(point);
+//                com.flir.thermalsdk.image.Point point = null;
+//                cameraHandler.setWidth_height(point);
+                cameraHandler.setRectangle(null);
 
             }
         });
@@ -457,6 +478,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     cameraHandler.add(identity);
+                    Connect();
                 }
             });
         }
@@ -503,10 +525,6 @@ public class MainActivity extends AppCompatActivity {
 //
 //            }
 //        }) ;
-        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
-        int width = metrics.widthPixels;
-        int height = metrics.heightPixels;
-        bottomBar=findViewById(R.id.top);
 
 
 
@@ -521,6 +539,9 @@ public class MainActivity extends AppCompatActivity {
     public  String stringTwoDigits(String str) {
         return str.length() < 2 ? str : str.substring(0, 2);
     }
+
+
+
 
 
 

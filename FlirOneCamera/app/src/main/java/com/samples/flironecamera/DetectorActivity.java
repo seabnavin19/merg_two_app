@@ -223,13 +223,20 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
   //list of face fetch from database
-  private List<Map<String,Object>> AllFaceFromDataBase;
+  private List<Map<String,Object>> AllFaceFromDataBase= new ArrayList<>();
   private Button addButton;
   private Spinner dropdown;
   private ArrayList<String> items;
   private TextView emailText;
 
   private ArrayList<String> em= new ArrayList<>();
+
+
+  int take=1;
+  int Noattendance=0;
+  int check=0;
+  int prepare=0;
+  private HashMap<String,String> userIDFace= new HashMap<>();
 
 
   @Override
@@ -242,10 +249,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       Attendance=0;
     }
     else {
-      AskingDialog();
+//      userIDFace.put("0","m");
+//      tracker.setIdname(userIDFace);
       emailText=findViewById(R.id.showEmail);
       emailText.setText(email);
       currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+
       items= new ArrayList<>();
       dropdown=findViewById(R.id.spinner1);
       db=FirebaseFirestore.getInstance();
@@ -302,6 +312,17 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           location_txt= dropdown.getSelectedItem().toString();
 //          successToast("mother");
           RegisterFaceFromFireBase();
+
+          Handler handler = new Handler();
+          handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+              check=1;
+              LoadFaceFromFirebase();
+              tracker.setIdname(userIDFace);
+            }
+          },2000);
+
         }
 
         @Override
@@ -469,81 +490,96 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     tracker.setFrameConfiguration(previewWidth, previewHeight, sensorOrientation);
   }
 
-  int k=0;
+  int detect=0;
   @Override
   protected void processImage() {
-    ++timestamp;
-    final long currTimestamp = timestamp;
-    trackingOverlay.postInvalidate();
+//    if (connectedIdentity==null){
+//      Connect();
+//    }
+      ++timestamp;
+      final long currTimestamp = timestamp;
+      trackingOverlay.postInvalidate();
 
-    // No mutex needed as this method is not reentrant.
-    if (computingDetection) {
+
+      // No mutex needed as this method is not reentrant.
+      if (computingDetection) {
+        readyForNextImage();
+        return;
+      }
+      computingDetection = true;
+
+      LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
+
+      rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
+
       readyForNextImage();
-      return;
-    }
-    computingDetection = true;
 
-    LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
+      final Canvas canvas = new Canvas(croppedBitmap);
+      canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+      // For examining the actual TF input.
+      if (SAVE_PREVIEW_BITMAP) {
+        ImageUtils.saveBitmap(croppedBitmap);
+      }
 
-    rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
 
-    readyForNextImage();
 
-    final Canvas canvas = new Canvas(croppedBitmap);
-    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
-    // For examining the actual TF input.
-    if (SAVE_PREVIEW_BITMAP) {
-      ImageUtils.saveBitmap(croppedBitmap);
-    }
+      InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
 
-    InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
-    faceDetector
-            .process(image)
-            .addOnSuccessListener(new OnSuccessListener<List<Face>>() {
-              @Override
-              public void onSuccess(List<Face> faces) {
-                if (faces.size() == 0) {
-                  updateResults(currTimestamp, new LinkedList<>());
-                  temperatureText.setText("");
-                  Noface+=1;
-                  IdFace.clear();
-                  temperatures.clear();
-                  temperatureData="0";
-                  temporary=0f;
-
-                  return;
-
-                }
-                else {
-                  if (Float.parseFloat(temperatureData)>=35.9){
-                    if (Float.parseFloat(temperatureData)>=temporary){
-                      temperatureText.setText(temperatureData+" °C");
-                      temporary=Float.parseFloat(temperatureData);
-                    }
-                    else {
-                      temperatureText.setText(String.valueOf(temporary)+" °C");
-                    }
-                  }
-
-                  else {
+      faceDetector
+              .process(image)
+              .addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+                @Override
+                public void onSuccess(List<Face> faces) {
+                  if (faces.size() == 0) {
+                    updateResults(currTimestamp, new LinkedList<>());
                     temperatureText.setText("");
+                    Noface+=1;
+                    IdFace.clear();
+                    temperatures.clear();
+                    temperatureData="0";
+                    temporary=0f;
+
+                    return;
+
                   }
+                  else {
+                    if (Float.parseFloat(temperatureData)>=35.9){
+                      if (Float.parseFloat(temperatureData)>=temporary){
+                        temperatureText.setText(temperatureData+" °C");
+                        temporary=Float.parseFloat(temperatureData);
+                      }
+                      else {
+                        temperatureText.setText(String.valueOf(temporary)+" °C");
+                      }
+                    }
+
+                    else {
+                      temperatureText.setText("");
+                    }
 
 
+                  }
+                  runInBackground(
+                          new Runnable() {
+                            @Override
+                            public void run() {
+
+
+                                onFacesDetected(currTimestamp, faces, addPending);
+
+                                addPending = false;
+
+
+
+
+                            }
+                          });
                 }
-                runInBackground(
-                        new Runnable() {
-                          @Override
-                          public void run() {
-                              onFacesDetected(currTimestamp, faces, addPending);
 
-                              addPending = false;
+              });
 
-                          }
-                        });
-              }
 
-            });
+
 
 
 
@@ -712,13 +748,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             });
 
   }
-  int take=1;
-  int Noattendance=0;
-  int check=0;
-  int prepare=0;
+
 
 
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
+
 
     cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
     final Canvas canvas = new Canvas(cropCopyBitmap);
@@ -776,7 +810,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       if (Noattendance==0){
         temperatures.clear();
       }
-      if (temperatures.size()>=3 && check==1){
+      if (temperatures.size()>=2 && check==1){
         take=0;
         IdFace.clear();
         TemperatureDialog();
@@ -856,7 +890,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 temperatureData="0";
               }
 //              Float temp=Float.parseFloat(temperatureData);
-              if (Float.parseFloat(temperatureData)>=35){
+              if (Float.parseFloat(temperatureData)>=35.8){
                 temperatures.add(temperatureData);
               }
 
@@ -985,7 +1019,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //    AddNewFace();
   }
 
-  private HashMap<String,String> userIDFace= new HashMap<>();
+
   public void LoadFaceFromFirebase(){
     for (Map<String, Object> document : AllFaceFromDataBase){
       float[][] Extra= new float[1][];
@@ -1212,7 +1246,7 @@ public void InfoDialog(){
     temp.setTextColor(Color.RED);
     temp.setText("Not Properly Checked");
   }
-  if (Float.parseFloat(resultMap.get("Temp"))>=37.5){
+  if (Float.parseFloat(resultMap.get("Temp"))>=37.8){
     temp.setTextColor(Color.RED);
     temp.setTextSize(30);
     temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")));
@@ -1334,7 +1368,7 @@ public void Check(){
   Log.d("kkk",String.valueOf(AddedFace));
 
   // we need to have only one face inorder to generate the temperature
-  if (AddedFace>=3 && check==1 && temperatures.size()!=0){
+  if (AddedFace>=2 && check==1 && temperatures.size()!=0){
     Allow_FaceDetect=false;
     AddedFace=0;
     ArrayList<String> FaceRepresent= new ArrayList<>(IdFace);

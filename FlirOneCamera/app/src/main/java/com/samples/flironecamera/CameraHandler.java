@@ -16,6 +16,7 @@ import android.util.Size;
 
 import com.flir.thermalsdk.androidsdk.image.BitmapAndroid;
 import com.flir.thermalsdk.image.Point;
+import com.flir.thermalsdk.image.Rectangle;
 import com.flir.thermalsdk.image.TemperatureUnit;
 import com.flir.thermalsdk.image.ThermalImage;
 import com.flir.thermalsdk.image.ThermalValue;
@@ -73,6 +74,7 @@ class CameraHandler {
     private String Info;
     private int go=0;
     private Point point=null;
+    private Rectangle rectangle;
     private int width=0;
     private ArrayList<Double> temperatures = new ArrayList<>();
     Bitmap dcBitmap1;
@@ -91,6 +93,13 @@ class CameraHandler {
     public void setWidth_height(Point point){
         this.point=point;
 
+    }
+    public void setRectangle(Rectangle rectangle){
+        this.rectangle=rectangle;
+    }
+
+    public Rectangle getRectangle() {
+        return rectangle;
     }
 
     public Point getPoint() {
@@ -276,7 +285,7 @@ class CameraHandler {
                 tempData="0";
 
 
-                if (getPoint()!=null){
+                if (getRectangle()!=null){
 
                     try {
 //                        Double dblSpotTemperature;
@@ -333,64 +342,66 @@ class CameraHandler {
 ////                        Double dblSpotTemperature7 = thermalImage.getValueAt(new Point(point.x-100,point.y));
 //                        ArrayList<Double> temperatures= new ArrayList<>(Arrays.asList(dblSpotTemperature,dblSpotTemperature1,dblSpotTemperature2,dblSpotTemperature3,dblSpotTemperature4,dblSpotTemperature5,dblSpotTemperature6,dblSpotTemperature7,dblSpotTemperature8));
 
-                    Double dblSpotTemperature= Double.valueOf(0f);
-                    Double dblSpotTemperature1= Double.valueOf(0f);
-                    Double dblSpotTemperature2 ;
-                    Double dblSpotTemperature3;
-
-                    for (int k=0;k<=700;k+=50){
-
-                        for (int j = 0; j<=500; j+=50) {
-                            try{
-                                dblSpotTemperature=thermalImage.getValueAt(new Point(point.x+j,point.y+k));
-
-                                temperatures.add(dblSpotTemperature);
-                        }catch (Exception e){
-                                dblSpotTemperature= Double.valueOf(0);
-
-                            }
-
-                            try {
-                            dblSpotTemperature1=thermalImage.getValueAt(new Point(point.x-j,point.y+k));
-
-                            temperatures.add(dblSpotTemperature1);
-                        }catch (Exception e){
-                            dblSpotTemperature1=Double.valueOf(0);
-                        }
-                            try{
-                                dblSpotTemperature2=thermalImage.getValueAt(new Point(point.x+j,point.y-k));
-
-                                temperatures.add(dblSpotTemperature2);
-                            }catch (Exception e){
-                                dblSpotTemperature2= Double.valueOf(0);
-
-                            }
-                            try{
-                                dblSpotTemperature3=thermalImage.getValueAt(new Point(point.x-j,point.y-k));
-
-                                temperatures.add(dblSpotTemperature3);
-                            }catch (Exception e){
-                                dblSpotTemperature3= Double.valueOf(0);
-
-                            }
-//                            if (>=36.0){
-//                                tempData=stringFourDigits(dblSpotTemperature);
-//                                Info= tempData;
+//                    Double dblSpotTemperature= Double.valueOf(0f);
+//                    Double dblSpotTemperature1= Double.valueOf(0f);
+//                    Double dblSpotTemperature2 ;
+//                    Double dblSpotTemperature3;
+//
+//                        for (int k=0;k<=700;k+=50){
+//
+//                            for (int j = 0; j<=500; j+=50) {
+//                                try{
+//                                    dblSpotTemperature=thermalImage.getValueAt(new Point(point.x+j,point.y+k));
+//
+//                                    temperatures.add(dblSpotTemperature);
+//                                }catch (Exception e){
+//                                    dblSpotTemperature= Double.valueOf(0);
+//
+//                                }
+//
+//                                try {
+//                                    dblSpotTemperature1=thermalImage.getValueAt(new Point(point.x-j,point.y+k));
+//
+//                                    temperatures.add(dblSpotTemperature1);
+//                                }catch (Exception e){
+//                                    dblSpotTemperature1=Double.valueOf(0);
+//                                }
+//                                try{
+//                                    dblSpotTemperature2=thermalImage.getValueAt(new Point(point.x+j,point.y-k));
+//
+//                                    temperatures.add(dblSpotTemperature2);
+//                                }catch (Exception e){
+//                                    dblSpotTemperature2= Double.valueOf(0);
+//
+//                                }
+//                                try{
+//                                    dblSpotTemperature3=thermalImage.getValueAt(new Point(point.x-j,point.y-k));
+//
+//                                    temperatures.add(dblSpotTemperature3);
+//                                }catch (Exception e){
+//                                    dblSpotTemperature3= Double.valueOf(0);
+//
+//                                }
+////                            if (>=36.0){
+////                                tempData=stringFourDigits(dblSpotTemperature);
+////                                Info= tempData;
+////
+////                            }
+//
 //
 //                            }
+//
+//                            if (Collections.max(temperatures)>=36.5){
+//                                Info=stringFourDigits(Collections.max(temperatures));
+//                                break;
+//                            }
+//
+//                        }
+//
+//                    Info=stringFourDigits(Collections.max(temperatures));
+//                    tempData=String.valueOf(temperatures.indexOf(Collections.max(temperatures)));
+//                    temperatures=new ArrayList<>();
 
-
-                        }
-
-                        if (Collections.max(temperatures)>=36.5){
-                            Info=stringFourDigits(Collections.max(temperatures));
-                            break;
-                        }
-
-                    }
-
-                    Info=stringFourDigits(Collections.max(temperatures));
-                    temperatures=new ArrayList<>();
 //                    dblSpotTemperature=thermalImage.getValueAt(new Point(point.x+i,point.y));
 //                        Double a= Math.max(dblSpotTemperature,dblSpotTemperature1);
 //                        Double b= Math.max(a,dblSpotTemperature2);
@@ -398,6 +409,14 @@ class CameraHandler {
 //                        tempData = String.valueOf(Collections.max(temperatures));
 //                        Info=String.valueOf(temperatures.indexOf(Collections.max(temperatures)))+tempData;
 //                        tempData = stringFourDigits(finalTemp)+" "+stringFourDigits(dblSpotTemperature3 )+" "+stringFourDigits(dblSpotTemperature4);
+                        double sum=0;
+                        int num=0;
+                        double[] temperatures= thermalImage.getValues(getRectangle());
+
+
+                        Arrays.sort(temperatures);
+                        tempData=(temperatures[temperatures.length-1]+"").substring(0,4);
+
                     }catch (Exception e){
                         tempData="0";
                     }
@@ -425,7 +444,7 @@ class CameraHandler {
             dcBitmap=Bitmap.createBitmap(dcBitmap,180,230,750,1050);
             dcBitmap=Bitmap.createScaledBitmap(dcBitmap,thermalImage.getWidth(),thermalImage.getHeight(),false);
             streamDataListener.images(msxBitmap,dcBitmap);
-//            tempData=thermalImage.getWidth()+" "+ dcBitmap.getHeight();
+//            tempData=thermalImage.getWidth()+" "+ dcBitmap.getWidth();
 
         }
     };

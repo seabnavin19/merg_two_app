@@ -4,7 +4,7 @@
 
     <uses-sdk />
     <!-- some hw might not support Usb Host mode so it's recommended to add this -->
-    <!-- <uses-feature android:name="android.hardware.usb.host" /> -->
+<!--     <uses-feature android:name="android.hardware.usb.host" /> -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -25,11 +25,17 @@
         <activity android:name=".login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter" />
         </activity>
         <activity android:name=".MainActivity">
+
+
 
 <!--             <intent-filter>-->
 <!--             <action android:name="android.intent.action.MAIN" />-->
