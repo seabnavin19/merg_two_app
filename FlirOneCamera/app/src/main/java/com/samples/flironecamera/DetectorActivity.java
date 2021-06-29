@@ -546,7 +546,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
 
-
                             }
                           });
                 }
@@ -770,7 +769,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       if (temperatureData==null){
         temperatureData="0";
       }
-      if (Float.parseFloat(temperatureData)>=35.1){
+      if (Float.parseFloat(temperatureData)>=35){
         temperatures.add(temperatureData);
       }
 
@@ -871,7 +870,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 temperatureData="0";
               }
 //              Float temp=Float.parseFloat(temperatureData);
-              if (Float.parseFloat(temperatureData)>=35.1){
+              if (Float.parseFloat(temperatureData)>=35){
                 temperatures.add(temperatureData);
               }
 
@@ -1211,7 +1210,7 @@ public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<St
 
       //to remove unwanted temperature from the list
       for (String tem: temperatures){
-        if (Float.parseFloat(tem)>=35.1){
+        if (Float.parseFloat(tem)>=35){
 //          temperatures.remove(tem);
           temperature.add(Float.parseFloat(tem));
           Toast.makeText(DetectorActivity.this,"hello",Toast.LENGTH_LONG).show();
