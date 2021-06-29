@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView msxImage;
 //    private ImageView photoImage;
 
-    private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
+    private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(100);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
 
 //    GraphicOverlay graphicOverlay;
@@ -302,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
 //                    descFlirOneStatus.setText("");
             });
         }).start();
+        temperatureData="0";
 
     }
 
@@ -381,10 +382,7 @@ public class MainActivity extends AppCompatActivity {
 
                 FrameDataHolder poll = framesBuffer.poll();
                 assert poll != null;
-//                msxImage.setImageBitmap(poll.msxBitmap);
-//                msxImage.setImageBitmap(poll.msxBitmap);
-//                dcimage.setImageBitmap(poll.dcBitmap);
-//                temperatureData = stringFourDigits(cameraHandler.getLogData());
+//                msxImage.setImageBitmap(poll.msxatatemperatureData = stringFourDigits(cameraHandler.getLogData());
 //                Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
                 mybitmap=poll.dcBitmap;
 //                detectFace();
@@ -395,69 +393,76 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void detectFace() {
+        try {
 
-        InputImage image = InputImage.fromBitmap(mybitmap, 0);
-        faceDetectors.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+            InputImage image = InputImage.fromBitmap(mybitmap, 0);
+            faceDetectors.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
 
-            @Override
-            public void onSuccess(List<Face> faces) {
-                if (faces.size() >= 1) {
-                    Face face = faces.get(0);
-                    
-                    final RectF boundingBoxt = new RectF(face.getBoundingBox());
-//                    com.flir.thermalsdk.image.Point point = new com.flir.thermalsdk.image.Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.top));
+                @Override
+                public void onSuccess(List<Face> faces) {
+                    if (faces.size() >= 1) {
+                        Face face = faces.get(0);
+
+                        final RectF boundingBoxt = new RectF(face.getBoundingBox());
+                        Point point = new Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.top));
 //                    Handler handler= new Handler();
-                    Rectangle rectangle= new Rectangle((int)(boundingBoxt.left+boundingBoxt.width()/8),(int)(boundingBoxt.top+boundingBoxt.height()/8),(int)(boundingBoxt.width()),(int)(boundingBoxt.height()));
+                        Rectangle rectangle = new Rectangle((int) (boundingBoxt.left + boundingBoxt.width() / 8), (int) (boundingBoxt.top + boundingBoxt.height() / 8), (int) (boundingBoxt.width()), (int) (boundingBoxt.height()));
 
 //                    cameraHandler.setWidth_height(point);
-                    cameraHandler.setRectangle(rectangle);
-                   if (cameraHandler.getLogData()!=null){
-                       temperatureData=cameraHandler.getLogData();
-                       if (Float.parseFloat(cameraHandler.getLogData())>=38.6){
-                           temperatureData="0";
-                       }
-                       if (Float.parseFloat(cameraHandler.getLogData())<35){
-                           Float me= Float.parseFloat(cameraHandler.getLogData())+1.5f;
-                           temperatureData=String.valueOf(me);
-                       }
-                       else if (Float.parseFloat(cameraHandler.getLogData())<=35.8 && Float.parseFloat(cameraHandler.getLogData())>=35) {
-                           Float me= Float.parseFloat(cameraHandler.getLogData())+0.5f;
-                           temperatureData=String.valueOf(me);
-                       }
+                        cameraHandler.setRectangle(rectangle);
+                        if (cameraHandler.getInfo() != null) {
+                            temperatureData = cameraHandler.getInfo();
+                            if (Float.parseFloat(cameraHandler.getInfo()) >= 38.1) {
+                                temperatureData = "0";
+                            }
+//                            if (Float.parseFloat(cameraHandler.getInfo())<= 35)
+//                            if (Float.parseFloat(cameraHandler.getInfo()) < 35.4) {
+//                                Float me = Float.parseFloat(cameraHandler.getInfo()) + 1.5f;
+//                                temperatureData = String.valueOf(me);
+//                            } else if (Float.parseFloat(cameraHandler.getInfo()) <= 35.8 && Float.parseFloat(cameraHandler.getInfo()) >= 35) {
+//                                Float me = Float.parseFloat(cameraHandler.getInfo()) + 0.5f;
+//                                temperatureData = String.valueOf(me);
+//                            }
 
 
-                   }
-                   else {
-                       temperatureData="0";
-                   }
+                        } else {
+//                            cameraHandler.setRectangle(null);
+                            mybitmap=null;
+                            temperatureData = "0";
+                        }
 //                    dcimage.invalidate();
 //                    BitmapDrawable drawable = (BitmapDrawable) dcimage.getDrawable();
 //                    Bitmap bitmap = drawable.getBitmap();
 
-                    Toast.makeText(MainActivity.this ,cameraHandler.getInfo()+":"+cameraHandler.getLogData(),Toast.LENGTH_LONG).show();
+//                        Toast.makeText(MainActivity.this,String.valueOf(point.x)+""+point.y+" "+cameraHandler.getPoint()+":"+cameraHandler.getInfo(), Toast.LENGTH_LONG).show();
 
-                }
-                else {
-//                    com.flir.thermalsdk.image.Point point = null;
-//                    cameraHandler.setWidth_height(point);
+                    } else {
+                    Point point = null;
+                    cameraHandler.setWidth_height(point);
+                    mybitmap=null;
 //                    dcimage.setImageBitmap(mybitmap);
-                    cameraHandler.setRectangle(null);
-                    temperatureData="0";
+//                        cameraHandler.setRectangle(null);
+                        temperatureData = "0";
 
 
+                    }
 
                 }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                com.flir.thermalsdk.image.Point point = null;
+                cameraHandler.setWidth_height(point);
+                temperatureData="0";
+                mybitmap=null;
+//                    cameraHandler.setRectangle(null);
 
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-//                com.flir.thermalsdk.image.Point point = null;
-//                cameraHandler.setWidth_height(point);
-                cameraHandler.setRectangle(null);
+                }
+            });
+        }catch (Exception e){
 
-            }
-        });
+            temperatureData="0";
+        }
 
 
     }

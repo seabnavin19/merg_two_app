@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -308,6 +309,27 @@ public abstract class CameraActivity extends MainActivity
       // Initialize the storage bitmaps once when the resolution is known.
       if (rgbBytes == null) {
         Camera.Size previewSize = camera.getParameters().getPreviewSize();
+//        Camera.Parameters param= camera.getParameters();
+//        param.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+          try {
+              Camera.Parameters parameters = camera.getParameters();
+              parameters.set("s3d-prv-frame-layout", "none");
+              parameters.set("s3d-cap-frame-layout", "none");
+              parameters.set("iso", "auto");
+              parameters.set("contrast", 100);
+              parameters.set("brightness", 50);
+              parameters.set("saturation", 100);
+              parameters.set("sharpness", 100);
+              parameters.setAntibanding("auto");
+              parameters.setPictureFormat(ImageFormat.JPEG);
+              parameters.set("jpeg-quality", 100);
+              parameters.setPictureSize(800, 600);
+              parameters.setRotation(180);
+              camera.setDisplayOrientation(90);
+              camera.setParameters(parameters);
+          } catch (Exception e) {
+              // cannot get camera or does not exist
+          }
         previewHeight = previewSize.height;
         previewWidth = previewSize.width;
         //rgbBytes = new int[previewWidth * previewHeight];

@@ -9,9 +9,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-feature
-        android:name="android.hardware.camera"
+        android:name="android.hardware.camera2"
         android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus" /> <!-- some hw might not support Usb Host mode so it's recommended to add this -->
+    <uses-feature android:name="android.hardware.camera2.CameraDevice" /> <!-- some hw might not support Usb Host mode so it's recommended to add this -->
     <uses-feature android:name="android.hardware.usb.host" />
 
     <application

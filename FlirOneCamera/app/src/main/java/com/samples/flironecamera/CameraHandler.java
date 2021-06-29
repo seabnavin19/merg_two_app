@@ -11,8 +11,11 @@ package com.samples.flironecamera;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.os.Build;
 import android.util.Log;
 import android.util.Size;
+
+import androidx.annotation.RequiresApi;
 
 import com.flir.thermalsdk.androidsdk.image.BitmapAndroid;
 import com.flir.thermalsdk.image.Point;
@@ -145,6 +148,7 @@ class CameraHandler {
             camera.unsubscribeAllStreams();
         }
         camera.disconnect();
+
     }
 
     /**
@@ -224,7 +228,7 @@ class CameraHandler {
     }
 
     public String getInfo() {
-        return Info;
+        return tempData;
     }
 
     @Nullable
@@ -263,6 +267,7 @@ class CameraHandler {
      */
     int k=0;
     private final Camera.Consumer<ThermalImage> handleIncomingImage = new Camera.Consumer<ThermalImage>() {
+        @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void accept(ThermalImage thermalImage) {
             Log.d(TAG, "accept() called with: thermalImage = [" + thermalImage.getDescription() + "]");
@@ -274,12 +279,11 @@ class CameraHandler {
             {
                 Objects.requireNonNull(thermalImage.getFusion()).setFusionMode(FusionMode.THERMAL_ONLY);
                 thermalImage.getFusion().setThermalFusionAbove(new ThermalValue(35.6, TemperatureUnit.CELSIUS));
-                thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(400, TemperatureUnit.CELSIUS));
+                thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(40, TemperatureUnit.CELSIUS));
 
                 Palette palette = PaletteManager.getDefaultPalettes().get(0);
                 thermalImage.setPalette(palette);
                 thermalImage.setTemperatureUnit(TemperatureUnit.CELSIUS);
-
                 ////////////////////////////
                 // HERE!!!!!!  Get temperature at the center of thermal image
                 tempData="0";
@@ -409,15 +413,15 @@ class CameraHandler {
 //                        tempData = String.valueOf(Collections.max(temperatures));
 //                        Info=String.valueOf(temperatures.indexOf(Collections.max(temperatures)))+tempData;
 //                        tempData = stringFourDigits(finalTemp)+" "+stringFourDigits(dblSpotTemperature3 )+" "+stringFourDigits(dblSpotTemperature4);
-                        double sum=0;
-                        int num=0;
+//                        double sum=0;
+//                        int num=0;
                         double[] temperatures= thermalImage.getValues(getRectangle());
-
-
                         Arrays.sort(temperatures);
-                        tempData=(temperatures[temperatures.length-1]+"").substring(0,4);
+                        Arrays.stream(temperatures).filter(n-> n>=34.9);
+                        tempData=(temperatures[(temperatures.length-1)/2]+"").substring(0,4);
 
                     }catch (Exception e){
+                        Info="0";
                         tempData="0";
                     }
 
@@ -427,6 +431,7 @@ class CameraHandler {
                     tempData="0";
                     Info=null;
                 }
+
 
 //                Log.d("++",String.valueOf((int) (thermalImage.getHeight()-0.001))+" "+thermalImage.getHeight());
 //                Double dblSpotTemperature = thermalImage.getValueAt(new Point(thermalImage.getWidth() / 2, thermalImage.getHeight() / 2));

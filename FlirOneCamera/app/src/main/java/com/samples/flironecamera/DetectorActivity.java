@@ -16,7 +16,6 @@
 
 package com.samples.flironecamera;
 
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -28,21 +27,17 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.text.Layout;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -50,28 +45,16 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.SetOptions;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
@@ -79,24 +62,17 @@ import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import com.google.rpc.context.AttributeContext;
 import com.samples.flironecamera.customview.OverlayView;
 import com.samples.flironecamera.customview.OverlayView.DrawCallback;
 import com.samples.flironecamera.env.BorderedText;
@@ -105,8 +81,6 @@ import com.samples.flironecamera.env.Logger;
 import com.samples.flironecamera.tflite.SimilarityClassifier;
 import com.samples.flironecamera.tflite.TFLiteObjectDetectionAPIModel;
 import com.samples.flironecamera.tracking.MultiBoxTracker;
-
-import io.grpc.internal.SharedResourceHolder;
 
 
 /**
@@ -193,7 +167,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private String currentuser;
   public  int Attendance;
   private MediaPlayer mp;
-//  private MediaPlayer alert;
+  private MediaPlayer alert;
 
 
   //to hide this 2 button
@@ -335,7 +309,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       Log.d("user",currentuser);
     }
     mp=MediaPlayer.create(this,R.raw.temprature_checked);
-//    alert=MediaPlayer.create(this,R.raw.alert);
+    alert=MediaPlayer.create(this,R.raw.high);
     fabAdd = findViewById(R.id.fab_add);
     connectButton=findViewById(R.id.connect_to_flir);
     disconnectButton=findViewById(R.id.disconnect_flir);
@@ -543,7 +517,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                   }
                   else {
-                    if (Float.parseFloat(temperatureData)>=35.9){
+//                    temperatureData="35.2";
+                    if (Float.parseFloat(temperatureData)>=35){
                       if (Float.parseFloat(temperatureData)>=temporary){
                         temperatureText.setText(temperatureData+" °C");
                         temporary=Float.parseFloat(temperatureData);
@@ -577,10 +552,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 }
 
               });
-
-
-
-
 
 
   }
@@ -799,7 +770,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       if (temperatureData==null){
         temperatureData="0";
       }
-      if (Float.parseFloat(temperatureData)>=35.8){
+      if (Float.parseFloat(temperatureData)>=35.1){
         temperatures.add(temperatureData);
       }
 
@@ -813,7 +784,17 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       if (temperatures.size()>=2 && check==1){
         take=0;
         IdFace.clear();
-        TemperatureDialog();
+        try {
+          TemperatureDialog();
+        }catch (Exception e){
+          take=1;
+          check=1;
+          temperatures.clear();
+          Noattendance=0;
+          prepare=0;
+          temporary=0f;
+        }
+
         prepare=0;
       }
     }
@@ -890,7 +871,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 temperatureData="0";
               }
 //              Float temp=Float.parseFloat(temperatureData);
-              if (Float.parseFloat(temperatureData)>=35.8){
+              if (Float.parseFloat(temperatureData)>=35.1){
                 temperatures.add(temperatureData);
               }
 
@@ -1030,7 +1011,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       int i=0;
       String Name=document.get("ID").toString();
 
-
       for (int k=0;k<ArrayListExtra.size();k++){
         arr0[k]= Float.parseFloat(String.valueOf(ArrayListExtra.get(k)));
       }
@@ -1066,7 +1046,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
     location_txt= dropdown.getSelectedItem().toString();
     People_Face people_face = new People_Face(NewPerson.getId(),NameFromFirebase,NewPerson.getDistance(),n,NewPerson.getTitle());
-    db.collection(currentuser).document("Face").update(ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
+    db.collection(currentuser).document("Face2").update(ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
       @Override
       public void onSuccess(Void aVoid) {
         progressDialog.dismiss();
@@ -1080,11 +1060,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 public void RegisterFaceFromFireBase() {
   FirebaseFirestore db = FirebaseFirestore.getInstance();
+  List<Map<String, Object>> usersReplace = new ArrayList<>();
   db.collection(currentuser).document("Face").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
     @Override
     public void onSuccess(DocumentSnapshot documentSnapshot) {
       Map<String, Object> map = documentSnapshot.getData();
-      List<Map<String, Object>> usersReplace = new ArrayList<>();
+
       if (map != null) {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
           HashMap<String,Object> user= new HashMap<>();
@@ -1111,6 +1092,67 @@ public void RegisterFaceFromFireBase() {
 
     }
   });
+
+  db.collection(currentuser).document("Face1").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+    @Override
+    public void onSuccess(DocumentSnapshot documentSnapshot) {
+      Map<String, Object> map = documentSnapshot.getData();
+
+      if (map != null) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+          HashMap<String,Object> user= new HashMap<>();
+          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
+          user.put("Id",by_key.get("id"));
+          user.put("Distance",by_key.get("distance"));
+          user.put("Title",by_key.get("title"));
+          user.put("Extra",by_key.get("face"));
+          user.put("Name",by_key.get("name"));
+          user.put("ID",entry.getKey());
+          usersReplace.add(user);
+          userIDFace.put(entry.getKey(),by_key.get("name").toString());
+//          successToast(user.get("ID").toString());
+
+        }
+        AllFaceFromDataBase=usersReplace;
+
+      }
+
+
+
+
+    }
+  });
+
+  db.collection(currentuser).document("Face2").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+    @Override
+    public void onSuccess(DocumentSnapshot documentSnapshot) {
+      Map<String, Object> map = documentSnapshot.getData();
+
+      if (map != null) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+          HashMap<String,Object> user= new HashMap<>();
+          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
+          user.put("Id",by_key.get("id"));
+          user.put("Distance",by_key.get("distance"));
+          user.put("Title",by_key.get("title"));
+          user.put("Extra",by_key.get("face"));
+          user.put("Name",by_key.get("name"));
+          user.put("ID",entry.getKey());
+          usersReplace.add(user);
+          userIDFace.put(entry.getKey(),by_key.get("name").toString());
+//          successToast(user.get("ID").toString());
+
+        }
+        AllFaceFromDataBase=usersReplace;
+
+      }
+
+
+
+
+    }
+  });
+
 
 
 }
@@ -1157,10 +1199,11 @@ public void GoToAttendance(View view){
 
 public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<String> temperatures){
     HashMap<String,String> result= new HashMap<>();
-    ArrayList<String> temperature= new ArrayList<>();
+    ArrayList<Float> temperature= new ArrayList<>();
 
 
-
+    try {
+      Float last_temp= 0f;
     if (Id.size()>=1){
       result.put("Id",Id.get(Id.size()-1));
       Float sum=0f;
@@ -1168,25 +1211,26 @@ public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<St
 
       //to remove unwanted temperature from the list
       for (String tem: temperatures){
-        if (Float.parseFloat(tem)>35){
+        if (Float.parseFloat(tem)>=35.1){
 //          temperatures.remove(tem);
-          temperature.add(tem);
+          temperature.add(Float.parseFloat(tem));
           Toast.makeText(DetectorActivity.this,"hello",Toast.LENGTH_LONG).show();
         }
       }
 
 
       // to find the average temperature
-     Float last_temp= 0f;
 
-      for (String i: temperature){
-        if (i==null){
-          sum+=0;
-        }else {
-//          sum+=Float.parseFloat(i);
-          last_temp=Math.max(last_temp,Float.parseFloat(i));
-        }
-      }
+
+//      for (String i: temperature){
+//        if (i==null){
+//          sum+=0;
+//        }else {
+////          sum+=Float.parseFloat(i);
+//          last_temp=Math.max(last_temp,Float.parseFloat(i));
+//        }
+//      }
+      last_temp=Collections.max(temperature);
       if (temperature.size()==0){
         result.put("Temp","0.0");
       }
@@ -1198,10 +1242,23 @@ public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<St
       }
 
 
+
+    }
+    if (last_temp<=37.4){
+      mp.start();
+    }
+
+    else {
+      alert.start();
     }
 
     Log.d("HH",temperatures.toString());
-    mp.start();
+
+
+    }catch (Exception e){
+      result.put("Temp","0");
+      result.put("Id","na");
+    }
 
     return result;
 
@@ -1246,7 +1303,7 @@ public void InfoDialog(){
     temp.setTextColor(Color.RED);
     temp.setText("Not Properly Checked");
   }
-  if (Float.parseFloat(resultMap.get("Temp"))>=37.8){
+  if (Float.parseFloat(resultMap.get("Temp"))>=37.5){
     temp.setTextColor(Color.RED);
     temp.setTextSize(30);
     temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")));
@@ -1255,7 +1312,7 @@ public void InfoDialog(){
   else {
     temp.setTextColor(Color.GREEN);
     temp.setTextSize(30);
-    temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")));
+    temp.setText("Temperature: "+stringFourDigits(resultMap.get("Temp")+" C"));
   }
 
   dateText.setText("Date: "+date);
@@ -1368,7 +1425,7 @@ public void Check(){
   Log.d("kkk",String.valueOf(AddedFace));
 
   // we need to have only one face inorder to generate the temperature
-  if (AddedFace>=2 && check==1 && temperatures.size()!=0){
+  if (AddedFace>=1 && check==1 && temperatures.size()!=0){
     Allow_FaceDetect=false;
     AddedFace=0;
     ArrayList<String> FaceRepresent= new ArrayList<>(IdFace);
@@ -1377,8 +1434,17 @@ public void Check(){
 
     IdFace.clear();
     check=0;
+    try {
+      InfoDialog();
+    }catch (Exception e){
+      check=1;
+      Allow_FaceDetect=true;
+      AddedFace=0;
+      IdFace.clear();
+      temperatures.clear();
+      temporary=0f;
+    }
 
-    InfoDialog();
     temperatures.clear();
   }
 
