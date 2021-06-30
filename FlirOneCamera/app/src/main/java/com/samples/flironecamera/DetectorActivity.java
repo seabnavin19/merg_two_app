@@ -187,6 +187,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
+  //use this variable to store all the id of people inorder to avoid adding duplicate people with the same id
+  private ArrayList<String> Ids= new ArrayList<>();
+
   public String stringFourDigits(String str) {
     return str.length() < 4 ? str : str.substring(0, 4);
   }
@@ -653,9 +656,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          detector.register(name,rec);
           NameFromFirebase=name;
           ID=id.getText().toString();
-          if (name.isEmpty()) {
+
+          if (name.isEmpty() || ID_i.isEmpty()) {
               return;
           }
+
         ArrayList<Float> n= new ArrayList<>();
         HashMap<String,Object> user= new HashMap<>();
         user.put("Id",rec.getId());
@@ -1001,6 +1006,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
   public void LoadFaceFromFirebase(){
+    Ids.clear();
     for (Map<String, Object> document : AllFaceFromDataBase){
       float[][] Extra= new float[1][];
 //      Toast.makeText(DetectorActivity.this,String.valueOf(AllFaceFromDataBase),Toast.LENGTH_LONG).show();
@@ -1009,6 +1015,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       float[] arr0= new float[ArrayListExtra.size()];
       int i=0;
       String Name=document.get("ID").toString();
+//      Ids.clear();
+      Ids.add(Name);
+
 
       for (int k=0;k<ArrayListExtra.size();k++){
         arr0[k]= Float.parseFloat(String.valueOf(ArrayListExtra.get(k)));
@@ -1021,9 +1030,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     }
     Toast.makeText(DetectorActivity.this,"Sucess register",Toast.LENGTH_LONG).show();
+    Log.d("Ids",Ids.toString());
   }
 
-  public void AddNewFace(){
+  // to send face to firebase if the id is not duplicate
+  public void SendData(){
     FirebaseFirestore db= FirebaseFirestore.getInstance();
     Map<String, Object> user = new HashMap<>();
     ArrayList<Float> n= new ArrayList<>();
@@ -1031,10 +1042,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     user.put("Id_image",NewPerson.getId());
     user.put("distance",NewPerson.getDistance());;
     user.put("Name",NameFromFirebase);
-//    user.put("Image",NewPerson.getCrop());
+    //    user.put("Image",NewPerson.getCrop());
     user.put("ID",ID);
 
-//    user.put("crop", Blob.fromBytes(getBytes(navin.gebbbbbbbbbbbbbbbhgggggggtCrop())));
+    //    user.put("crop", Blob.fromBytes(getBytes(navin.gebbbbbbbbbbbbbbbhgggggggtCrop())));
     int p=0;
     for (float[] i:NewPerson.getExtra()){
       for (float j : i){
@@ -1052,6 +1063,32 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       }
 
     });
+  }
+
+  public void AddNewFace(){
+    if (!Ids.contains(ID)){
+     SendData();
+    }
+    else {
+      progressDialog.dismiss();
+      AlertDialog.Builder builder= new AlertDialog.Builder(this);
+      builder.setMessage("This ID already Contain in Database Do you want to Update?");
+      builder.setCancelable(false)
+      .setNegativeButton("No", new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+
+        }
+      })
+      .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          progressDialog.show();
+          SendData();
+        }
+      });
+      builder.show();
+    }
 
 
   }
