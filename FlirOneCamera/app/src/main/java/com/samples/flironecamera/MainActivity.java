@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        try{
         ThermalLog.LogLevel enableLoggingInDebug;
         if (BuildConfig.DEBUG) enableLoggingInDebug = ThermalLog.LogLevel.DEBUG;
         else enableLoggingInDebug = ThermalLog.LogLevel.NONE;
@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
         // and before ANY using any ThermalSdkAndroid functions
         //ThermalLog will show log from the Thermal SDK in standards android log framework
         ThermalSdkAndroid.init(getApplicationContext(), enableLoggingInDebug);
+        }catch (Exception e){}
 
         permissionHandler = new PermissionHandler(showMessage, MainActivity.this);
 
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         mybitmap=myLogo;
         this.startDiscovery();
         setupViews();
-        Connect();
+//        Connect();
     }
 
     @Override
@@ -160,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         this.stopDiscovery();
         this.disconnect();
+//        cameraHandler.clear();
 
     }
 
@@ -289,6 +291,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Disconnect to a camera
      */
+
     private void disconnect() {
         updateConnectionText(connectedIdentity, "DISCONNECTING");
         connectedIdentity = null;
@@ -309,6 +312,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Update the UI text for connection status
      */
+
+
     private void updateConnectionText(Identity identity, String status) {
         String deviceId = identity != null ? identity.deviceId : "";
         MainActivity.this.showMessage.show(deviceId + ": " + status);
@@ -409,11 +414,14 @@ public class MainActivity extends AppCompatActivity {
                         Rectangle rectangle = new Rectangle((int) (boundingBoxt.left + boundingBoxt.width() / 8), (int) (boundingBoxt.top + boundingBoxt.height() / 8), (int) (boundingBoxt.width()), (int) (boundingBoxt.height()));
 
 //                    cameraHandler.setWidth_height(point);
+                        try{
                         cameraHandler.setRectangle(rectangle);
+                        }catch (Exception e){}
+
                         if (cameraHandler.getInfo() != null) {
                             temperatureData = cameraHandler.getInfo();
                             if (Float.parseFloat(cameraHandler.getInfo()) >= 38.1) {
-                                temperatureData = "0";
+                                temperatureData = "36.0";
                             }
 //                            if (Float.parseFloat(cameraHandler.getInfo())<= 35)
 //                            if (Float.parseFloat(cameraHandler.getInfo()) < 35.4) {
@@ -427,13 +435,12 @@ public class MainActivity extends AppCompatActivity {
 
                         } else {
 //                            cameraHandler.setRectangle(null);
-                            mybitmap=null;
+//                            mybitmap=null;
                             temperatureData = "0";
                         }
 //                    dcimage.invalidate();
 //                    BitmapDrawable drawable = (BitmapDrawable) dcimage.getDrawable();
 //                    Bitmap bitmap = drawable.getBitmap();
-
 //                        Toast.makeText(MainActivity.this,String.valueOf(point.x)+""+point.y+" "+cameraHandler.getPoint()+":"+cameraHandler.getInfo(), Toast.LENGTH_LONG).show();
 
                     } else {
@@ -444,9 +451,7 @@ public class MainActivity extends AppCompatActivity {
 //                        cameraHandler.setRectangle(null);
                         temperatureData = "0";
 
-
                     }
-
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -483,7 +488,12 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     cameraHandler.add(identity);
-                    Connect();
+                    try{
+                        Connect();
+                    }catch (Exception e){
+
+                    }
+
                 }
             });
         }

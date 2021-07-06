@@ -417,9 +417,17 @@ class CameraHandler {
 //                        int num=0;
                         double[] temperatures= thermalImage.getValues(getRectangle());
                         Arrays.sort(temperatures);
-                        Arrays.stream(temperatures).filter(n-> n>=34.9);
-                        tempData=(temperatures[(temperatures.length-1)/2]+"").substring(0,4);
 
+                        if (temperatures.length>0){
+                            Arrays.sort(temperatures);
+                            int index=temperatures.length-1;
+                            tempData=((temperatures[(index/2)]+temperatures[index])/2+"").substring(0,4);
+                        }
+                        else {
+                            tempData="36.5";
+                        }
+
+//                        tempData=(Arrays.stream(temperatures).average()+"").substring(0,4);
                     }catch (Exception e){
                         Info="0";
                         tempData="0";

@@ -18,6 +18,7 @@ package com.samples.flironecamera;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -32,6 +33,7 @@ import android.graphics.Typeface;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -49,6 +51,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -64,6 +68,7 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -185,6 +190,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private  Float temporary=0f;
 //  private TextView faceLocation;
 
+
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
   //use this variable to store all the id of people inorder to avoid adding duplicate people with the same id
@@ -216,11 +222,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private HashMap<String,String> userIDFace= new HashMap<>();
 
 
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     final Intent[] i = {getIntent()};
     String email= i[0].getStringExtra("Email");
+//    LoadFaceFromFirebase();
+
 //    faceLocation=findViewById(R.id.FaceText);
     if (email.equals("No")){
       Attendance=0;
@@ -228,6 +237,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     else {
 //      userIDFace.put("0","m");
 //      tracker.setIdname(userIDFace);
+
       emailText=findViewById(R.id.showEmail);
       emailText.setText(email);
       currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -249,7 +259,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
 
             dropdown.setAdapter(adapter);
-
           }
           else {
             String[] SpinnerArray= new String[]{"NoLocation"};
@@ -298,12 +307,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               LoadFaceFromFirebase();
               tracker.setIdname(userIDFace);
             }
-          },2000);
+          },3000);
 
         }
 
         @Override
         public void onNothingSelected(AdapterView<?> parent) {
+          LoadFaceFromFirebase();
 
         }
       });
@@ -356,9 +366,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
 
-
-
   }
+
+
 
 
 
@@ -367,6 +377,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     addPending = true;
     //Toast.makeText(this, "click", Toast.LENGTH_LONG ).show();
 
+  }
+
+  @Override
+  public synchronized void onPause() {
+    super.onPause();
+//    Attendance=1;
+//    Noattendance=0;
+//    LoadFaceFromFirebase();
   }
 
   @Override
@@ -554,8 +572,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 }
 
               });
-
-
   }
 
   @Override
@@ -716,6 +732,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             new Runnable() {
               @Override
               public void run() {
+
                 showFrameInfo(previewWidth + "x" + previewHeight);
                 showCropInfo(croppedBitmap.getWidth() + "x" + croppedBitmap.getHeight());
                 showInference(lastProcessingTimeMs + "ms");
@@ -724,7 +741,32 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   }
 
+  @Override
+  protected void onRestart() {
+    super.onRestart();
+    Thread.currentThread().interrupt();
 
+    updateResults(0, new LinkedList<>());
+    temperatureText.setText("");
+    Noface+=1;
+    IdFace.clear();
+    temperatures.clear();
+    temperatureData="0";
+    temporary=0f;
+    final Handler handler = new Handler();
+    handler.postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        // Do something after 5s = 5000ms
+        LoadFaceFromFirebase();
+        check=1;
+        tracker.setIdname(userIDFace);
+
+      }
+    }, 3000);
+
+
+  }
 
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
 
@@ -1376,7 +1418,7 @@ public void InfoDialog(){
         temporary=0f;
       }
     }
-  },2000);
+  },3000);
 
 
 
