@@ -4,9 +4,9 @@
 
     <uses-sdk />
     <!-- some hw might not support Usb Host mode so it's recommended to add this -->
-<!--     <uses-feature android:name="android.hardware.usb.host" /> -->
+    <!-- <uses-feature android:name="android.hardware.usb.host" /> -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-feature
         android:name="android.hardware.camera2"
@@ -21,30 +21,62 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.ObjectDetection">
-        <activity android:name=".change_pass"></activity>
-        <activity android:name=".login">
+
+        <service
+            android:name=".MyService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".test_home"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
             <meta-data
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/device_filter" />
         </activity>
-        <activity android:name=".MainActivity">
-
-
+        <activity android:name=".change_pass" />
+        <activity
+            android:noHistory="true"
+            android:name=".login">
 
 <!--             <intent-filter>-->
 <!--             <action android:name="android.intent.action.MAIN" />-->
+<!--             <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
 
 
 <!--             <category android:name="android.intent.category.LAUNCHER" />-->
 <!--             </intent-filter>-->
+
+
+<!--             <meta-data-->
+<!--             android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"-->
+<!--             android:resource="@xml/device_filter" />-->
         </activity>
         <activity
+            android:noHistory="true"
+            android:name=".MainActivity">
+
+<!--             <intent-filter>-->
+<!--             <action android:name="android.intent.action.MAIN" />-->
+<!--             <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
+
+
+<!--             <category android:name="android.intent.category.LAUNCHER" />-->
+<!--             </intent-filter>-->
+
+
+<!--             <meta-data-->
+<!--             android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"-->
+<!--             android:resource="@xml/device_filter" />-->
+        </activity>
+        <activity
+            android:noHistory="true"
             android:name=".DetectorActivity"
             android:screenOrientation="portrait">
 

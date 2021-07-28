@@ -9,10 +9,10 @@ public class People_Face {
    private Bitmap Image;
     private String Name;
     private float distance;
-    private ArrayList<Float> face;
+    private String face;
     private String title;
 
-    People_Face (String Id,String Name, float distance, ArrayList<Float> face,String title){
+    People_Face (String Id,String Name, float distance,String face,String title){
         this.Id=Id;
         this.Name=Name;
         this.distance=distance;
@@ -33,7 +33,7 @@ public class People_Face {
         return distance;
     }
 
-    public ArrayList<Float> getFace() {
+    public String getFace() {
         return face;
     }
 

@@ -18,8 +18,12 @@ package com.samples.flironecamera;
 
 import android.Manifest;
 import android.app.Fragment;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
@@ -36,6 +40,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.os.Trace;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -73,7 +80,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import com.samples.flironecamera.env.ImageUtils;
 import com.samples.flironecamera.env.Logger;
-public abstract class CameraActivity extends MainActivity
+public abstract class CameraActivity extends AppCompatActivity
     implements OnImageAvailableListener,
         Camera.PreviewCallback,
         CompoundButton.OnCheckedChangeListener,
@@ -98,6 +105,7 @@ public abstract class CameraActivity extends MainActivity
 //  private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
 //  public   String temperatureData = null;
 //  public TextView temperature_Data;
+public String temperatureData="000";
 
     public interface ShowMessage {
     void show(String message);
@@ -137,14 +145,15 @@ public abstract class CameraActivity extends MainActivity
 
   private static final String KEY_USE_FACING = "use_facing";
   private Integer useFacing = null;
-  private String cameraId = null;
+  private String cameraId = "Camera";
 
   protected Integer getCameraFacing() {
     return useFacing;
   }
 
   public TextView temperatureText;
-
+  public PermissionHandler permissionHandler;
+    private MainActivity.ShowMessage showMessage = message -> Toast.makeText(CameraActivity.this, message, Toast.LENGTH_SHORT).show();
 
 
 
@@ -152,89 +161,193 @@ public abstract class CameraActivity extends MainActivity
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
     super.onCreate(null);
-
       setupView();
+      permissionHandler = new PermissionHandler(showMessage, CameraActivity.this);
+      startService(new Intent(CameraActivity.this,MyService.class));
   }
-  private void setupView(){
-    Intent intent = getIntent();
-//    useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_FRONT);
-    useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_FRONT);
+  //add
+  Messenger mService;
+    boolean mBound = false;
+    final String TAG = "MainFragment";
 
-    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-    setContentView(R.layout.tfe_od_activity_camera);
-    Toolbar toolbar = findViewById(R.id.toolbar);
-    temperatureText=findViewById(R.id.temperatureText);
-    setSupportActionBar(toolbar);
-    getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-
-
-
-    if (hasPermission()) {
-      setFragment();
-    } else {
-      requestPermission();
+    public CameraActivity() {
+        // Required empty public constructor
     }
+
+    MyReceiver myReceiver;
+    @Override
+    public void onStart() {
+//        myReceiver = new test_home.MyReceiver();
+//        IntentFilter intentFilter = new IntentFilter();
+//        intentFilter.addAction(MyService2.MY_ACTION);
+//        registerReceiver(myReceiver, intentFilter);
+        myReceiver = new MyReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MyService.MY_ACTION);
+        registerReceiver(myReceiver, intentFilter);
+
+        //Start our own service
+//        Intent i = new Intent(test_home.this,
+//                MyService.class);
+//        startService(i);
+        super.onStart();
+        // Bind to LocalService
+        Intent intent = new Intent(CameraActivity.this, MyService.class);
+        CameraActivity.this.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+    @Override
+    public void onStop() {
+//        unregisterReceiver(myReceiver);
+        super.onStop();
+        // Unbind from the service
+        unregisterReceiver(myReceiver);
+        if (mBound) {
+            CameraActivity.this.unbindService(mConnection);
+            mBound = false;
+        }
+    }
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mService=new Messenger(service);
+            mBound = true;
+            Log.v("mehi", "connected is true");
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            mBound = false;
+            Log.v("mehi", "Disconnected!");
+
+
+        }
+    };
+
+    public void stop(){
+        stopService(new Intent(CameraActivity.this,MyService.class));
+        if (mBound) {
+            CameraActivity.this.unbindService(mConnection);
+            mBound = false;
+        }
+    }
+
+    Handler handler1 = new Handler();
+    Runnable runnable;
+    int delay = 3*1000; //Delay for 15 seconds.  One second = 1000 milliseconds.
+
+    //    CameraHandler cameraHandler= MyService.cameraHandler;
+    private class MyReceiver extends BroadcastReceiver {
+
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String datapassed = intent.getStringExtra("DATAPASSED");
+            temperatureData=datapassed;
+//            temperatureText.setText(datapassed);
+
+//            if (Float.parseFloat(datapassed)>=33){
+//                Intent i = new Intent(test_home.this,login.class);
+//                startActivity(i);
+//            }
+
+
+
+
+        }
+    }
+
+  private void setupView(){
+      try {
+          Intent intent = getIntent();
+//    useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_FRONT);
+          useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_FRONT);
+
+          getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+          setContentView(R.layout.tfe_od_activity_camera);
+          Toolbar toolbar = findViewById(R.id.toolbar);
+          temperatureText = findViewById(R.id.temperatureText);
+          setSupportActionBar(toolbar);
+          getSupportActionBar().setDisplayShowTitleEnabled(false);
+          temperatureText.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View v) {
+
+                      gotoHome();
+
+
+
+              }
+          });
+
+
+          if (hasPermission()) {
+              setFragment();
+          } else {
+              requestPermission();
+          }
 
 //    threadsTextView = findViewById(R.id.threads);
 //    plusImageView = findViewById(R.id.plus);
 //    minusImageView = findViewById(R.id.minus);
 //    apiSwitchCompat = findViewById(R.id.api_info_switch);
-    bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
-    gestureLayout = findViewById(R.id.gesture_layout);
-    sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
-    bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
+          bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
+          gestureLayout = findViewById(R.id.gesture_layout);
+          sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
+          bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
 
 //    btnSwitchCam = findViewById(R.id.fab_switchcam);
 
-    ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
-    vto.addOnGlobalLayoutListener(
-            new ViewTreeObserver.OnGlobalLayoutListener() {
-              @Override
-              public void onGlobalLayout() {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                  gestureLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                } else {
-                  gestureLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                }
-                //                int width = bottomSheetLayout.getMeasuredWidth();
-                int height = gestureLayout.getMeasuredHeight();
+          ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
+          vto.addOnGlobalLayoutListener(
+                  new ViewTreeObserver.OnGlobalLayoutListener() {
+                      @Override
+                      public void onGlobalLayout() {
+                          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                              gestureLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                          } else {
+                              gestureLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                          }
+                          //                int width = bottomSheetLayout.getMeasuredWidth();
+                          int height = gestureLayout.getMeasuredHeight();
 
-                sheetBehavior.setPeekHeight(height);
-              }
-            });
-    sheetBehavior.setHideable(false);
+                          sheetBehavior.setPeekHeight(height);
+                      }
+                  });
+          sheetBehavior.setHideable(false);
 
-    sheetBehavior.setBottomSheetCallback(
-            new BottomSheetBehavior.BottomSheetCallback() {
-              @Override
-              public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                  case BottomSheetBehavior.STATE_HIDDEN:
-                    break;
-                  case BottomSheetBehavior.STATE_EXPANDED:
-                  {
-                    bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_down);
-                  }
-                  break;
-                  case BottomSheetBehavior.STATE_COLLAPSED:
-                  {
-                    bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
-                  }
-                  break;
-                  case BottomSheetBehavior.STATE_DRAGGING:
-                    break;
-                  case BottomSheetBehavior.STATE_SETTLING:
-                    bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
-                    break;
-                }
-              }
+          sheetBehavior.setBottomSheetCallback(
+                  new BottomSheetBehavior.BottomSheetCallback() {
+                      @Override
+                      public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                          switch (newState) {
+                              case BottomSheetBehavior.STATE_HIDDEN:
+                                  break;
+                              case BottomSheetBehavior.STATE_EXPANDED: {
+                                  bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_down);
+                              }
+                              break;
+                              case BottomSheetBehavior.STATE_COLLAPSED: {
+                                  bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
+                              }
+                              break;
+                              case BottomSheetBehavior.STATE_DRAGGING:
+                                  break;
+                              case BottomSheetBehavior.STATE_SETTLING:
+                                  bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
+                                  break;
+                          }
+                      }
 
-              @Override
-              public void onSlide(@NonNull View bottomSheet, float slideOffset) {}
+                      @Override
+                      public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                      }
 
-            });
+                  });
 
 //    frameValueTextView = findViewById(R.id.frame_info);
 //    cropValueTextView = findViewById(R.id.crop_info);
@@ -251,6 +364,8 @@ public abstract class CameraActivity extends MainActivity
 //        connect(cameraHandler.getFlirOne());
 //      }
 //    });
+      }catch (Exception e){}
+      Log.i("ccccc",cameraId.toString());
 
   }
 
@@ -283,6 +398,13 @@ public abstract class CameraActivity extends MainActivity
 //    startActivity(intent);
 //    overridePendingTransition(0, 0);
 //  }
+
+   public void gotoHome(){
+       Intent i = new Intent(CameraActivity.this,test_home.class);
+       startActivity(i);
+       stop();
+       finish();
+   }
 
   protected int[] getRgbBytes() {
     imageConverter.run();
@@ -370,8 +492,19 @@ public abstract class CameraActivity extends MainActivity
   }
 
   /** Callback for Camera2 API */
+
+  public int Noface=0;
   @Override
   public void onImageAvailable(final ImageReader reader) {
+
+//      if(Noface>=100){
+//          Intent i = new Intent(CameraActivity.this,test_home.class);
+//          startActivity(i);
+//          stop();
+//          finish();
+//
+//
+//      }
     // We need wait until we have some size from onPreviewSizeChosen
     if (previewWidth == 0 || previewHeight == 0) {
       return;
@@ -442,15 +575,36 @@ public abstract class CameraActivity extends MainActivity
   @Override
   public synchronized void onResume() {
 //    LOGGER.d("onResume " + this);
+      handler1.postDelayed( runnable = new Runnable() {
+          public void run() {
+              //do something
+              Message msg = Message.obtain(null, MyService.MSG_SAY_HELLO, 0, 0);
+              try {
+//                    mService.send(msg);
+
+//                Toast.makeText(test_home.this,MyService.cameraHandler.getInfo(),Toast.LENGTH_SHORT).show();
+
+                  Log.v(TAG, "Message sent.");
+              } catch ( Exception e) {
+                  e.printStackTrace();
+              }
+
+              handler.postDelayed(runnable, delay);
+          }
+      }, delay);
     super.onResume();;
     handlerThread = new HandlerThread("inference");
     handlerThread.start();
     handler = new Handler(handlerThread.getLooper());
+
+
   }
 
   @Override
   public synchronized void onPause() {
-    LOGGER.d("onPause " + this);
+      handler1.removeCallbacks(runnable);
+      LOGGER.d("onPause " + this);
+
 
     handlerThread.quitSafely();
     try {
@@ -460,23 +614,27 @@ public abstract class CameraActivity extends MainActivity
     } catch (final InterruptedException e) {
       LOGGER.e(e, "Exception!");
     }
+      super.onPause();
 
-    super.onPause();
   }
 
 //  @Override
 //  public synchronized void onStop() {
-////    LOGGER.d("onStop " + this);
+//    LOGGER.d("onStop " + this);
 //    super.onStop();
 //
 //  }
 //
-//  @Override
-//  public synchronized void onDestroy() {
-////    LOGGER.d("onDestroy " + this);
+  @Override
+  public synchronized void onDestroy() {
+    LOGGER.d("onDestroy " + this);
+    super.onDestroy();
+      stopService(new Intent(CameraActivity.this,MyService.class));
 //    super.onDestroy();
-//
-//  }
+//    super.stopDiscovery();
+//    cameraHandler.disconnect();
+
+  }
 
   protected synchronized void runInBackground(final Runnable r) {
     if (handler != null) {
@@ -488,7 +646,7 @@ public abstract class CameraActivity extends MainActivity
   @Override
   public void onRequestPermissionsResult(int requestCode,  String[] permissions, int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-      permissionHandler.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//      permissionHandler.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (requestCode == PERMISSIONS_REQUEST) {
       if (allPermissionsGranted(grantResults)) {
         setFragment();
@@ -589,7 +747,8 @@ public abstract class CameraActivity extends MainActivity
             LOGGER.e(e, "Not allowed to access camera");
         }
 
-        return null;
+        return "1";
+
     }
 
 

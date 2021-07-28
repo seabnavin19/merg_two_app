@@ -167,13 +167,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Boolean Allow_FaceDetect=true;
   private int AddedFace=0;
   private  HashMap<String,String> resultMap;
-  private  int Noface;
+//  private  int Noface;
   private String ID;
   private String currentuser;
   public  int Attendance;
   private MediaPlayer mp;
   private MediaPlayer alert;
-
+//  private String temperatureData="0";
 
   //to hide this 2 button
   private Button attendance;
@@ -226,8 +226,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    try{
     final Intent[] i = {getIntent()};
     String email= i[0].getStringExtra("Email");
+//    temperatureData="0";
 //    LoadFaceFromFirebase();
 
 //    faceLocation=findViewById(R.id.FaceText);
@@ -307,13 +309,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               LoadFaceFromFirebase();
               tracker.setIdname(userIDFace);
             }
-          },3000);
+          },2000);
 
         }
 
         @Override
         public void onNothingSelected(AdapterView<?> parent) {
-          LoadFaceFromFirebase();
+//          LoadFaceFromFirebase();
 
         }
       });
@@ -359,6 +361,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     FaceDetector detector = FaceDetection.getClient(options);
 
     faceDetector = detector;
+    }catch (Exception e){
+      Log.d("ex",e.toString());
+    }
 
 
 
@@ -491,6 +496,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //    if (connectedIdentity==null){
 //      Connect();
 //    }
+
       ++timestamp;
       final long currTimestamp = timestamp;
       trackingOverlay.postInvalidate();
@@ -507,7 +513,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
 
-      readyForNextImage();
+        readyForNextImage();
+
+
 
       final Canvas canvas = new Canvas(croppedBitmap);
       canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
@@ -515,10 +523,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       if (SAVE_PREVIEW_BITMAP) {
         ImageUtils.saveBitmap(croppedBitmap);
       }
+      Log.i("temmm",temperatureData);
+
+
+
 
 
 
       InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
+
 
       faceDetector
               .process(image)
@@ -526,53 +539,69 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 @Override
                 public void onSuccess(List<Face> faces) {
                   if (faces.size() == 0) {
-                    updateResults(currTimestamp, new LinkedList<>());
-                    temperatureText.setText("");
-                    Noface+=1;
-                    IdFace.clear();
-                    temperatures.clear();
-                    temperatureData="0";
-                    temporary=0f;
-
-                    return;
-
-                  }
-                  else {
-//                    temperatureData="35.2";
-                    if (Float.parseFloat(temperatureData)>=35){
-                      if (Float.parseFloat(temperatureData)>=temporary){
-                        temperatureText.setText(temperatureData+" °C");
-                        temporary=Float.parseFloat(temperatureData);
-                      }
-                      else {
-                        temperatureText.setText(String.valueOf(temporary)+" °C");
-                      }
-                    }
-
-                    else {
+                      updateResults(currTimestamp, new LinkedList<>());
                       temperatureText.setText("");
+                      Noface+=1;
+                      IdFace.clear();
+                      temperatures.clear();
+                      temperatureData="0";
+                      temporary=0f;
+
+                      // 500 equal to 1 minute
+
+                      if(Noface>=500*15 && k==0){
+//                        Intent i = new Intent(DetectorActivity.this,test_home.class);
+//                        startActivity(i);
+//                        stop();
+//                        finish();
+                        k=1;
+
+                        gotoHome();
+
+
+                      }
+
+                      return;
+
                     }
+                    else {
+  //                    temperatureData="35.2";
+                      if (Float.parseFloat(temperatureData)>=34){
+                        if (Float.parseFloat(temperatureData)>=temporary){
+                          temperatureText.setText(temperatureData+" °C");
+                          temporary=Float.parseFloat(temperatureData);
+                        }
+                        else {
+                          temperatureText.setText(String.valueOf(temporary)+" °C");
+                        }
+                      }
+
+                      else {
+                        temperatureText.setText("");
+                      }
 
 
+                    }
+                    runInBackground(
+                            new Runnable() {
+                              @Override
+                              public void run() {
+
+
+                                  onFacesDetected(currTimestamp, faces, addPending);
+
+                                  addPending = false;
+
+
+
+
+                              }
+                            });
                   }
-                  runInBackground(
-                          new Runnable() {
-                            @Override
-                            public void run() {
 
-
-                                onFacesDetected(currTimestamp, faces, addPending);
-
-                                addPending = false;
-
-
-
-                            }
-                          });
-                }
-
-              });
-  }
+                });
+      }
+  int k=0;
 
   @Override
   protected int getLayoutId() {
@@ -678,25 +707,28 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           }
 
         ArrayList<Float> n= new ArrayList<>();
+        String string_n="";
         HashMap<String,Object> user= new HashMap<>();
         user.put("Id",rec.getId());
         user.put("Distance",rec.getDistance());
         user.put("Title",rec.getTitle());
         user.put("Name",name);
         user.put("ID",ID_i);
+        user.put("Extra",rec.getExtra().toString());
 
         int p=0;
-        for (float[] arr :rec.getExtra()){
-          for (float j : arr){
-            n.add(j);
-          }
-          user.put("n"+ p,n);
-          p+=1;
-        }
-        user.put("Extra",n);
-        userIDFace.put(ID_i,name);
-        AllFaceFromDataBase.add(user);
+//        for (float[] arr :rec.getExtra()){
+//          for (float j : arr){
+//            n.add(j);
+//          }
+//          user.put("n"+ p,n);
+//          p+=1;
+//        }
 
+
+        userIDFace.put(ID_i,name);
+//        AllFaceFromDataBase.add(user);
+//        Log.d("faceees",rec.getExtra())
           builder.setCancelable(false);
           progressDialog= new ProgressDialog(DetectorActivity.this);
           progressDialog.setMessage("Uploading Image To DataBase..!");
@@ -768,218 +800,227 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   }
 
+  @Override
+  public synchronized void onResume() {
+    super.onResume();
+//    updateResults(currTime, facees);;
+  }
+  long currTime;
+  List<SimilarityClassifier.Recognition> facees;
+
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
+//    detectFace();
+    if (Float.parseFloat(temperatureData)>=30) {
+      cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+      final Canvas canvas = new Canvas(cropCopyBitmap);
+      final Paint paint = new Paint();
+      paint.setColor(Color.RED);
+      paint.setStyle(Style.STROKE);
+      paint.setStrokeWidth(2.0f);
 
-
-    cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-    final Canvas canvas = new Canvas(cropCopyBitmap);
-    final Paint paint = new Paint();
-    paint.setColor(Color.RED);
-    paint.setStyle(Style.STROKE);
-    paint.setStrokeWidth(2.0f);
-
-    float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-    switch (MODE) {
-      case TF_OD_API:
-        minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-        break;
-    }
-
-    final List<SimilarityClassifier.Recognition> mappedRecognitions =
-            new LinkedList<SimilarityClassifier.Recognition>();
-
-
-    //final List<Classifier.Recognition> results = new ArrayList<>();
-
-    // Note this can be done only once
-    int sourceW = rgbFrameBitmap.getWidth();
-    int sourceH = rgbFrameBitmap.getHeight();
-    int targetW = portraitBmp.getWidth();
-    int targetH = portraitBmp.getHeight();
-    Matrix transform = createTransform(
-            sourceW,
-            sourceH,
-            targetW,
-            targetH,
-            sensorOrientation);
-    final Canvas cv = new Canvas(portraitBmp);
-
-    // draws the original image in portrait mode.
-    cv.drawBitmap(rgbFrameBitmap, transform, null);
-
-    final Canvas cvFace = new Canvas(faceBmp);
-    boolean saved = false;
-    Face facea=faces.get(0);
-      detectFace();
-    final RectF boundingBoxt = new RectF(facea.getBoundingBox());
-    if (take==1){
-      if (temperatureData==null){
-        temperatureData="0";
-      }
-      if (Float.parseFloat(temperatureData)>=35){
-        temperatures.add(temperatureData);
+      float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+      switch (MODE) {
+        case TF_OD_API:
+          minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+          break;
       }
 
-      Log.d("kkkk",String.valueOf(temperatures.size()));
-    }
-    if (Attendance==0 || Noattendance==1){
+      final List<SimilarityClassifier.Recognition> mappedRecognitions =
+              new LinkedList<SimilarityClassifier.Recognition>();
 
-      if (Noattendance==0){
-        temperatures.clear();
+
+      //final List<Classifier.Recognition> results = new ArrayList<>();
+
+      // Note this can be done only once
+      int sourceW = rgbFrameBitmap.getWidth();
+      int sourceH = rgbFrameBitmap.getHeight();
+      int targetW = portraitBmp.getWidth();
+      int targetH = portraitBmp.getHeight();
+      Matrix transform = createTransform(
+              sourceW,
+              sourceH,
+              targetW,
+              targetH,
+              sensorOrientation);
+      final Canvas cv = new Canvas(portraitBmp);
+
+      // draws the original image in portrait mode.
+      cv.drawBitmap(rgbFrameBitmap, transform, null);
+
+      final Canvas cvFace = new Canvas(faceBmp);
+      boolean saved = false;
+      Face facea = faces.get(0);
+//      detectFace();
+      final RectF boundingBoxt = new RectF(facea.getBoundingBox());
+      if (take == 1) {
+        if (temperatureData == null) {
+          temperatureData = "0";
+        }
+        if (Float.parseFloat(temperatureData) >= 35) {
+          temperatures.add(temperatureData);
+        }
+
+        //      Log.d("kkkk",String.valueOf(temperatures.size()));
       }
-      if (temperatures.size()>=2 && check==1){
-        take=0;
-        IdFace.clear();
-        try {
-          TemperatureDialog();
-        }catch (Exception e){
-          take=1;
-          check=1;
+      if (Attendance == 0 || Noattendance == 1) {
+
+        if (Noattendance == 0) {
           temperatures.clear();
-          Noattendance=0;
-          prepare=0;
-          temporary=0f;
         }
+        if (temperatures.size() >= 2 && check == 1) {
+          take = 0;
+          IdFace.clear();
+          try {
+            TemperatureDialog();
+          } catch (Exception e) {
+            take = 1;
+            check = 1;
+            temperatures.clear();
+            Noattendance = 0;
+            prepare = 0;
+            temporary = 0f;
+          }
 
-        prepare=0;
+          prepare = 0;
+        }
       }
-    }
-    ArrayList<Face> faces1= new ArrayList<>();
-    faces1.add(faces.get(0));
+      ArrayList<Face> faces1 = new ArrayList<>();
+      faces1.add(faces.get(0));
 
-    for (Face face : faces1) {
+      for (Face face : faces1) {
 
-      LOGGER.i("Running detection on face " + currTimestamp);
-      //results = detector.recognizeImage(croppedBitmap);
+        LOGGER.i("Running detection on face " + currTimestamp);
+        //results = detector.recognizeImage(croppedBitmap);
 
-      final RectF boundingBox = new RectF(face.getBoundingBox());
+        final RectF boundingBox = new RectF(face.getBoundingBox());
 
-      //final boolean goodConfidence = result.getConfidence() >= minimumConfidence;
-      final boolean goodConfidence = true; //face.get;
-      if (boundingBox != null && goodConfidence) {
+        //final boolean goodConfidence = result.getConfidence() >= minimumConfidence;
+        final boolean goodConfidence = true; //face.get;
+        if (boundingBox != null && goodConfidence) {
 
-        // maps crop coordinates to original
-        cropToFrameTransform.mapRect(boundingBox);
+          // maps crop coordinates to original
+          cropToFrameTransform.mapRect(boundingBox);
 
-        // maps original coordinates to portrait coordinates
-        RectF faceBB = new RectF(boundingBox);
-        transform.mapRect(faceBB);
+          // maps original coordinates to portrait coordinates
+          RectF faceBB = new RectF(boundingBox);
+          transform.mapRect(faceBB);
 
-        // translates portrait to origin and scales to fit input inference size
-        //cv.drawRect(faceBB, paint);
-        float sx = ((float) TF_OD_API_INPUT_SIZE) / faceBB.width();
-        float sy = ((float) TF_OD_API_INPUT_SIZE) / faceBB.height();
-        Matrix matrix = new Matrix();
-        matrix.postTranslate(-faceBB.left, -faceBB.top);
-        matrix.postScale(sx, sy);
+          // translates portrait to origin and scales to fit input inference size
+          //cv.drawRect(faceBB, paint);
+          float sx = ((float) TF_OD_API_INPUT_SIZE) / faceBB.width();
+          float sy = ((float) TF_OD_API_INPUT_SIZE) / faceBB.height();
+          Matrix matrix = new Matrix();
+          matrix.postTranslate(-faceBB.left, -faceBB.top);
+          matrix.postScale(sx, sy);
 
-        cvFace.drawBitmap(portraitBmp, matrix, null);
+          cvFace.drawBitmap(portraitBmp, matrix, null);
 
-        //canvas.drawRect(faceBB, paint);
+          //canvas.drawRect(faceBB, paint);
 
-        String label = "";
-        float confidence = -1f;
-        Integer color = Color.BLUE;
-        float[][] extra = null;
-        Bitmap crop = null;
+          String label = "";
+          float confidence = -1f;
+          Integer color = Color.BLUE;
+          float[][] extra = null;
+          Bitmap crop = null;
 
-        if (add) {
-          crop = Bitmap.createBitmap(portraitBmp,
-                            (int) faceBB.left,
-                            (int) faceBB.top,
-                            (int) faceBB.width(),
-                            (int) faceBB.height());
-        }
+          if (add) {
+            crop = Bitmap.createBitmap(portraitBmp,
+                    (int) faceBB.left,
+                    (int) faceBB.top,
+                    (int) faceBB.width(),
+                    (int) faceBB.height());
+          }
 
-        final long startTime = SystemClock.uptimeMillis();
-        final List<SimilarityClassifier.Recognition> resultsAux = detector.recognizeImage(faceBmp, add);
-        lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+          final long startTime = SystemClock.uptimeMillis();
+          final List<SimilarityClassifier.Recognition> resultsAux = detector.recognizeImage(faceBmp, add);
+          lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-        if (resultsAux.size() > 0) {
+          if (resultsAux.size() > 0) {
 
-          SimilarityClassifier.Recognition result = resultsAux.get(0);
+            SimilarityClassifier.Recognition result = resultsAux.get(0);
 
-          extra = result.getExtra();
-//          Object extra = result.getExtra();
-//          if (extra != null) {
-//            LOGGER.i("embeeding retrieved " + extra.toString());
-//          }
+            extra = result.getExtra();
+            //          Object extra = result.getExtra();
+            //          if (extra != null) {
+            //            LOGGER.i("embeeding retrieved " + extra.toString());
+            //          }
 
-          float conf = result.getDistance();
-          if (conf < 0.69f) {
-            confidence = conf;
-            label = result.getTitle();
-            if (result.getId().equals("0")) {
-              Noattendance=0;
-              color = Color.GREEN;
-//              Float temp= Float.parseFloat(temperatureData);
-              if (temperatureData==null){
-                temperatureData="0";
+            float conf = result.getDistance();
+            if (conf < 0.69f) {
+              confidence = conf;
+              label = result.getTitle();
+              if (result.getId().equals("0")) {
+                Noattendance = 0;
+                color = Color.GREEN;
+                //              Float temp= Float.parseFloat(temperatureData);
+                if (temperatureData == null) {
+                  temperatureData = "0";
+                }
+                //              Float temp=Float.parseFloat(temperatureData);
+                if (Float.parseFloat(temperatureData) >= 35) {
+                  temperatures.add(temperatureData);
+                }
+
+                Check();
+
+                Log.d("MyFace", String.valueOf(AddedFace));
+
+              } else {
+                color = Color.RED;
               }
-//              Float temp=Float.parseFloat(temperatureData);
-              if (Float.parseFloat(temperatureData)>=35){
-                temperatures.add(temperatureData);
+            } else {
+              prepare += 1;
+              Log.d("kkkk", "pre" + String.valueOf(prepare));
+              if (prepare >= 5) {
+                Noattendance = 1;
+                prepare = 0;
               }
-
-              Check();
-
-              Log.d("MyFace",String.valueOf(AddedFace));
-
             }
-            else {
-              color = Color.RED;
-            }
+
           }
-          else {
-            prepare+=1;
-            Log.d("kkkk","pre"+String.valueOf(prepare));
-            if (prepare>=5){
-              Noattendance=1;
-              prepare=0;
+
+          if (getCameraFacing() == CameraCharacteristics.LENS_FACING_FRONT) {
+
+            // camera is frontal so the image is flipped horizontally
+            // flips horizontally
+            Matrix flip = new Matrix();
+            if (sensorOrientation == 90 || sensorOrientation == 270) {
+              flip.postScale(1, -1, previewWidth / 2.0f, previewHeight / 2.0f);
+            } else {
+              flip.postScale(-1, 1, previewWidth / 2.0f, previewHeight / 2.0f);
             }
+            //flip.postScale(1, -1, targetW / 2.0f, targetH / 2.0f);
+            flip.mapRect(boundingBox);
+
           }
+
+          final SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition(
+                  "0", label, confidence, boundingBox);
+
+          result.setColor(color);
+          result.setLocation(boundingBox);
+          result.setExtra(extra);
+          result.setCrop(crop);
+          mappedRecognitions.add(result);
 
         }
 
-        if (getCameraFacing() == CameraCharacteristics.LENS_FACING_FRONT) {
-
-          // camera is frontal so the image is flipped horizontally
-          // flips horizontally
-          Matrix flip = new Matrix();
-          if (sensorOrientation == 90 || sensorOrientation == 270) {
-            flip.postScale(1, -1, previewWidth / 2.0f, previewHeight / 2.0f);
-          }
-          else {
-            flip.postScale(-1, 1, previewWidth / 2.0f, previewHeight / 2.0f);
-          }
-          //flip.postScale(1, -1, targetW / 2.0f, targetH / 2.0f);
-          flip.mapRect(boundingBox);
-
-        }
-
-        final SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition(
-                "0", label, confidence, boundingBox);
-
-        result.setColor(color);
-        result.setLocation(boundingBox);
-        result.setExtra(extra);
-        result.setCrop(crop);
-        mappedRecognitions.add(result);
 
       }
 
 
+      //    if (saved) {
+      //      lastSaved = System.currentTimeMillis();
+      //    }
+
+
+      updateResults(currTimestamp, mappedRecognitions);
+
     }
-
-
-
-    //    if (saved) {
-//      lastSaved = System.currentTimeMillis();
-//    }
-
-
-    updateResults(currTimestamp, mappedRecognitions);
-
+    else {
+      updateResults(0, new LinkedList<>());
+      temperatureData="0";
+    }
 
   }
   private ImageView testImage;
@@ -1050,25 +1091,29 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   public void LoadFaceFromFirebase(){
     Ids.clear();
     for (Map<String, Object> document : AllFaceFromDataBase){
+      Log.d("string_face",document.get("Extra").toString());
       float[][] Extra= new float[1][];
 //      Toast.makeText(DetectorActivity.this,String.valueOf(AllFaceFromDataBase),Toast.LENGTH_LONG).show();
       float Distance= Float.parseFloat(String.valueOf(document.get("Distance")));
-      ArrayList<Float> ArrayListExtra= (ArrayList<Float>) document.get("Extra");
-      float[] arr0= new float[ArrayListExtra.size()];
+      String[] string_face= (String[]) document.get("Extra");
+//      ArrayList<Float> ArrayListExtra= (ArrayList<Float>) document.get("Extra");
+      Log.d("faceeees",String.valueOf(string_face[0]));
+
+      float[] arr0= new float[string_face.length];
       int i=0;
       String Name=document.get("ID").toString();
 //      Ids.clear();
       Ids.add(Name);
 
 
-      for (int k=0;k<ArrayListExtra.size();k++){
-        arr0[k]= Float.parseFloat(String.valueOf(ArrayListExtra.get(k)));
+      for (int k=0;k<string_face.length;k++){
+        arr0[k]= Float.parseFloat(String.valueOf(string_face[k]));
       }
       Extra[0]=arr0;
+      Log.d("faceeees",String.valueOf(arr0[0]));
       SimilarityClassifier.Recognition Newface= new SimilarityClassifier.Recognition(document.get("Id").toString(),document.get("Title").toString(),Distance,new RectF());
       Newface.setExtra(Extra);
       detector.register(Name,Newface);
-
 
     }
     Toast.makeText(DetectorActivity.this,"Sucess register",Toast.LENGTH_LONG).show();
@@ -1076,35 +1121,46 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
   // to send face to firebase if the id is not duplicate
-  public void SendData(){
+  public Map<String, Object> SendData(){
     FirebaseFirestore db= FirebaseFirestore.getInstance();
     Map<String, Object> user = new HashMap<>();
-    ArrayList<Float> n= new ArrayList<>();
-    user.put("title",NewPerson.getTitle().toString());
-    user.put("Id_image",NewPerson.getId());
-    user.put("distance",NewPerson.getDistance());;
+    String string_n="";
+//    ArrayList<String> n= new ArrayList<>();
+    user.put("Title",NewPerson.getTitle().toString());
+    user.put("Id",NewPerson.getId());
+    user.put("Distance",NewPerson.getDistance());;
     user.put("Name",NameFromFirebase);
     //    user.put("Image",NewPerson.getCrop());
     user.put("ID",ID);
 
     //    user.put("crop", Blob.fromBytes(getBytes(navin.gebbbbbbbbbbbbbbbhgggggggtCrop())));
     int p=0;
-    for (float[] i:NewPerson.getExtra()){
-      for (float j : i){
-        n.add(j);
-      }
-      user.put("n"+ p,n);
-      p+=1;
+    float[][] n= NewPerson.getExtra();
+
+    float[] n1= n[0];
+    string_n+=n1[0];
+    for(int i=1;i<=n1.length-1;i++){
+      string_n+=","+String.valueOf(n1[i]);
+//      Log.d("faceeees",String.valueOf(n1[i]));
     }
-    location_txt= dropdown.getSelectedItem().toString();
-    People_Face people_face = new People_Face(NewPerson.getId(),NameFromFirebase,NewPerson.getDistance(),n,NewPerson.getTitle());
-    db.collection(currentuser).document("Face2").update(ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
+
+
+//      Log.d("faceeees",String.valueOf(Float.parseFloat("-3.4075818E-4")-1));
+      user.put("Extra",string_n.toString().split(","));
+//      Toast.makeText(DetectorActivity.this,n.toString().substring(1,-1),Toast.LENGTH_LONG).show();
+    AllFaceFromDataBase.add(user);
+      p+=1;
+
+//    location_txt= dropdown.getSelectedItem().toString();
+    People_Face people_face = new People_Face(NewPerson.getId(),NameFromFirebase,NewPerson.getDistance(),string_n.substring(1,string_n.length()-1),NewPerson.getTitle());
+    db.collection(currentuser).document("Face").update(ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
       @Override
       public void onSuccess(Void aVoid) {
         progressDialog.dismiss();
       }
-
+//
     });
+    return user;
   }
 
   public void AddNewFace(){
@@ -1132,7 +1188,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       builder.show();
     }
 
-
   }
 
 
@@ -1143,7 +1198,7 @@ public void RegisterFaceFromFireBase() {
     @Override
     public void onSuccess(DocumentSnapshot documentSnapshot) {
       Map<String, Object> map = documentSnapshot.getData();
-
+      String[] mm;
       if (map != null) {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
           HashMap<String,Object> user= new HashMap<>();
@@ -1151,7 +1206,9 @@ public void RegisterFaceFromFireBase() {
           user.put("Id",by_key.get("id"));
           user.put("Distance",by_key.get("distance"));
           user.put("Title",by_key.get("title"));
-          user.put("Extra",by_key.get("face"));
+          mm=by_key.get("face").toString().split(",");
+//          Log.d("faceees",mm.toString());
+          user.put("Extra",by_key.get("face").toString().split(","));
           user.put("Name",by_key.get("name"));
           user.put("ID",entry.getKey());
           usersReplace.add(user);
@@ -1160,76 +1217,80 @@ public void RegisterFaceFromFireBase() {
 
         }
         AllFaceFromDataBase=usersReplace;
+
 
       }
       else {
         AllFaceFromDataBase= new ArrayList<>();
+
       }
+
+//      Toast.makeText(DetectorActivity.this,mm,Toast.LENGTH_LONG).show();
 
 
 
     }
   });
 
-  db.collection(currentuser).document("Face1").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-    @Override
-    public void onSuccess(DocumentSnapshot documentSnapshot) {
-      Map<String, Object> map = documentSnapshot.getData();
+//  db.collection(currentuser).document("Face1").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+//    @Override
+//    public void onSuccess(DocumentSnapshot documentSnapshot) {
+//      Map<String, Object> map = documentSnapshot.getData();r
+//
+//      if (map != null) {
+//        for (Map.Entry<String, Object> entry : map.entrySet()) {
+//          HashMap<String,Object> user= new HashMap<>();
+//          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
+//          user.put("Id",by_key.get("id"));
+//          user.put("Distance",by_key.get("distance"));
+//          user.put("Title",by_key.get("title"));
+//          user.put("Extra",by_key.get("face"));
+//          user.put("Name",by_key.get("name"));
+//          user.put("ID",entry.getKey());
+//          usersReplace.add(user);
+//          userIDFace.put(entry.getKey(),by_key.get("name").toString());
+////          successToast(user.get("ID").toString());
+//
+//        }
+//        AllFaceFromDataBase=usersReplace;
+//
+//      }
+//
+//
+//
+//
+//    }
+//  });
 
-      if (map != null) {
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-          HashMap<String,Object> user= new HashMap<>();
-          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
-          user.put("Id",by_key.get("id"));
-          user.put("Distance",by_key.get("distance"));
-          user.put("Title",by_key.get("title"));
-          user.put("Extra",by_key.get("face"));
-          user.put("Name",by_key.get("name"));
-          user.put("ID",entry.getKey());
-          usersReplace.add(user);
-          userIDFace.put(entry.getKey(),by_key.get("name").toString());
-//          successToast(user.get("ID").toString());
-
-        }
-        AllFaceFromDataBase=usersReplace;
-
-      }
-
-
-
-
-    }
-  });
-
-  db.collection(currentuser).document("Face2").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-    @Override
-    public void onSuccess(DocumentSnapshot documentSnapshot) {
-      Map<String, Object> map = documentSnapshot.getData();
-
-      if (map != null) {
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-          HashMap<String,Object> user= new HashMap<>();
-          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
-          user.put("Id",by_key.get("id"));
-          user.put("Distance",by_key.get("distance"));
-          user.put("Title",by_key.get("title"));
-          user.put("Extra",by_key.get("face"));
-          user.put("Name",by_key.get("name"));
-          user.put("ID",entry.getKey());
-          usersReplace.add(user);
-          userIDFace.put(entry.getKey(),by_key.get("name").toString());
-//          successToast(user.get("ID").toString());
-
-        }
-        AllFaceFromDataBase=usersReplace;
-
-      }
-
-
-
-
-    }
-  });
+//  db.collection(currentuser).document("Face2").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+//    @Override
+//    public void onSuccess(DocumentSnapshot documentSnapshot) {
+//      Map<String, Object> map = documentSnapshot.getData();
+//
+//      if (map != null) {
+//        for (Map.Entry<String, Object> entry : map.entrySet()) {
+//          HashMap<String,Object> user= new HashMap<>();
+//          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
+//          user.put("Id",by_key.get("id"));
+//          user.put("Distance",by_key.get("distance"));
+//          user.put("Title",by_key.get("title"));
+//          user.put("Extra",by_key.get("face"));
+//          user.put("Name",by_key.get("name"));
+//          user.put("ID",entry.getKey());
+//          usersReplace.add(user);
+//          userIDFace.put(entry.getKey(),by_key.get("name").toString());
+////          successToast(user.get("ID").toString());
+//
+//        }
+//        AllFaceFromDataBase=usersReplace;
+//
+//      }
+//
+//
+//
+//
+//    }
+//  });
 
 
 
@@ -1418,7 +1479,7 @@ public void InfoDialog(){
         temporary=0f;
       }
     }
-  },3000);
+  },2000);
 
 
 

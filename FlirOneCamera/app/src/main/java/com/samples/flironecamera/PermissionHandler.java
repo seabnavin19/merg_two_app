@@ -19,12 +19,14 @@
 package com.samples.flironecamera;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Process;
 
 import com.flir.thermalsdk.log.ThermalLog;
 
 import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -56,7 +58,7 @@ import androidx.core.content.ContextCompat;
 public class PermissionHandler {
 
     private static final String TAG = "PermissionHandler";
-    private final MainActivity mainActivity;
+    private final Activity mainActivity;
 
     MainActivity.ShowMessage showMessage;
 
@@ -84,7 +86,7 @@ public class PermissionHandler {
             Manifest.permission.ACCESS_FINE_LOCATION,
     };
 
-    public PermissionHandler(MainActivity.ShowMessage showMessage, MainActivity mainActivity) {
+    public PermissionHandler(MainActivity.ShowMessage showMessage, Activity mainActivity) {
         this.showMessage = showMessage;
         this.mainActivity = mainActivity;
     }

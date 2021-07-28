@@ -24,9 +24,12 @@ import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -55,6 +58,7 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 //import com.samples.flironecamera.helpers.RectOverlay;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -91,17 +95,19 @@ public class MainActivity extends AppCompatActivity {
     //private TextView discoveryStatus;
     private TextView descFlirOneStatus;
 
-    private ImageView msxImage;
+//    private ImageView msxImage;
 //    private ImageView photoImage;
 
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(100);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
 
 //    GraphicOverlay graphicOverlay;
-    public Bitmap mybitmap=null;
+//    public Bitmap mybitmap=null;
 
     public   String temperatureData ="0";
 
+    private TextView tm;
+    public int goToNextAction;
 
     //draw line
 
@@ -123,6 +129,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // keep screen on forever
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        goToNextAction=1;
+
+        //if we want to keep screen on for specific duration
+
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//            }
+//        }, 20000);
+
         try{
         ThermalLog.LogLevel enableLoggingInDebug;
         if (BuildConfig.DEBUG) enableLoggingInDebug = ThermalLog.LogLevel.DEBUG;
@@ -140,45 +160,27 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        FaceDetectorOptions options =
-                new FaceDetectorOptions.Builder()
-                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-                        .setContourMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-                        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-                        .build();
 
-        FaceDetector detector = FaceDetection.getClient(options);
-        faceDetectors=detector;
-        Bitmap myLogo = ((BitmapDrawable)getResources().getDrawable(R.drawable.logo)).getBitmap();
-        mybitmap=myLogo;
+//        Bitmap myLogo = ((BitmapDrawable)getResources().getDrawable(R.drawable.logo)).getBitmap();
+//        mybitmap=myLogo;
         this.startDiscovery();
         setupViews();
 //        Connect();
     }
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         this.stopDiscovery();
         this.disconnect();
-//        cameraHandler.clear();
+        cameraHandler.clear();
 
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        this.stopDiscovery();
-        this.disconnect();
 
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        this.startDiscovery();
 
-    }
 
     public void startDiscovery(View view) {
         startDiscovery();
@@ -217,8 +219,6 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Handle Android permission request response for Bluetooth permissions
      */
-
-
     /**
      * Connect to a Camera
      */
@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     Log.d(TAG, "Could not connect: " + e);
                     updateConnectionText(identity, "DISCONNECTED");
-                    descFlirOneStatus.setText("");
+//                    descFlirOneStatus.setText("");
                 });
             }
         }).start();
@@ -330,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Stop camera discovery
      */
-    private void stopDiscovery() {
+    public void stopDiscovery() {
         cameraHandler.stopDiscovery(discoveryStatusListener);
     }
 
@@ -367,10 +367,10 @@ public class MainActivity extends AppCompatActivity {
 
             runOnUiThread(() -> {
 //                msxImage.setImageBitmap(dataHolder.dcBitmap);
-                msxImage.setImageBitmap(dataHolder.msxBitmap);
+
             });
         }
-
+//        int go=1;
         @Override
         public void images(Bitmap msxBitmap, Bitmap dcBitmap) {
 
@@ -389,8 +389,36 @@ public class MainActivity extends AppCompatActivity {
                 assert poll != null;
 //                msxImage.setImageBitmap(poll.msxatatemperatureData = stringFourDigits(cameraHandler.getLogData());
 //                Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
-                mybitmap=poll.dcBitmap;
-//                detectFace();
+//                mybitmap=poll.dcBitmap;
+
+
+
+                // start camera when the temperature equal to human temperature
+//                if(goToNextAction==1){
+//                    temperatureData=cameraHandler.getInfo();
+//                    if (Float.parseFloat(temperatureData)>=34){
+//
+//                            Intent i = new Intent(MainActivity.this,login.class);
+//                            startActivity(i);
+//                        }
+//
+
+                    Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
+                temperatureData=cameraHandler.getInfo();
+                tm.setText(temperatureData);
+
+                Log.i("tempppp",temperatureData);
+
+//                    if (goToNextAction==1){
+//
+//                        if (Float.parseFloat(temperatureData)>=10){
+//                            Intent u = new Intent(MainActivity.this,login.class);
+//                            startActivityForResult(u,1);
+//                        }
+//
+//                    }
+//
+////                }
             });
         }
 
@@ -398,81 +426,82 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void detectFace() {
-        try {
-
-            InputImage image = InputImage.fromBitmap(mybitmap, 0);
-            faceDetectors.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
-
-                @Override
-                public void onSuccess(List<Face> faces) {
-                    if (faces.size() >= 1) {
-                        Face face = faces.get(0);
-
-                        final RectF boundingBoxt = new RectF(face.getBoundingBox());
-                        Point point = new Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.top));
-//                    Handler handler= new Handler();
-                        Rectangle rectangle = new Rectangle((int) (boundingBoxt.left + boundingBoxt.width() / 8), (int) (boundingBoxt.top + boundingBoxt.height() / 8), (int) (boundingBoxt.width()), (int) (boundingBoxt.height()));
-
-//                    cameraHandler.setWidth_height(point);
-                        try{
-                        cameraHandler.setRectangle(rectangle);
-                        }catch (Exception e){}
-
-                        if (cameraHandler.getInfo() != null) {
-                            temperatureData = cameraHandler.getInfo();
-                            if (Float.parseFloat(cameraHandler.getInfo()) >= 38.1) {
-                                temperatureData = "36.0";
-                            }
-//                            if (Float.parseFloat(cameraHandler.getInfo())<= 35)
-//                            if (Float.parseFloat(cameraHandler.getInfo()) < 35.4) {
-//                                Float me = Float.parseFloat(cameraHandler.getInfo()) + 1.5f;
-//                                temperatureData = String.valueOf(me);
-//                            } else if (Float.parseFloat(cameraHandler.getInfo()) <= 35.8 && Float.parseFloat(cameraHandler.getInfo()) >= 35) {
-//                                Float me = Float.parseFloat(cameraHandler.getInfo()) + 0.5f;
-//                                temperatureData = String.valueOf(me);
+        temperatureData=cameraHandler.getInfo();
+//        try {
+//            goToNextAction=0;
+//            InputImage image = InputImage.fromBitmap(mybitmap, 0);
+//            faceDetectors.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+//
+//                @Override
+//                public void onSuccess(List<Face> faces) {
+//                    faces= new ArrayList<>();
+//                    if (faces.size() >= 1) {
+//                        Face face = faces.get(0);
+//
+//                        final RectF boundingBoxt = new RectF(face.getBoundingBox());
+//                        Point point = new Point((int) (boundingBoxt.centerX()), (int) (boundingBoxt.top));
+////                    Handler handler= new Handler();
+//                        Rectangle rectangle = new Rectangle((int) (boundingBoxt.left + boundingBoxt.width() / 8), (int) (boundingBoxt.top + boundingBoxt.height() / 8), (int) (boundingBoxt.width()), (int) (boundingBoxt.height()));
+//
+////                    cameraHandler.setWidth_height(point);
+//                        try{
+//                        cameraHandler.setRectangle(rectangle);
+//                        }catch (Exception e){}
+//
+//                        if (cameraHandler.getInfo() != null) {
+//                            temperatureData = cameraHandler.getInfo();
+//                            if (Float.parseFloat(cameraHandler.getInfo()) >= 38.1) {
+//                                temperatureData = "36.0";
 //                            }
-
-
-                        } else {
-//                            cameraHandler.setRectangle(null);
-//                            mybitmap=null;
-                            temperatureData = "0";
-                        }
-//                    dcimage.invalidate();
-//                    BitmapDrawable drawable = (BitmapDrawable) dcimage.getDrawable();
-//                    Bitmap bitmap = drawable.getBitmap();
-//                        Toast.makeText(MainActivity.this,String.valueOf(point.x)+""+point.y+" "+cameraHandler.getPoint()+":"+cameraHandler.getInfo(), Toast.LENGTH_LONG).show();
-
-                    } else {
-                    Point point = null;
-                    cameraHandler.setWidth_height(point);
-                    mybitmap=null;
-//                    dcimage.setImageBitmap(mybitmap);
-//                        cameraHandler.setRectangle(null);
-                        temperatureData = "0";
-
-                    }
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                com.flir.thermalsdk.image.Point point = null;
-                cameraHandler.setWidth_height(point);
-                temperatureData="0";
-                mybitmap=null;
-//                    cameraHandler.setRectangle(null);
-
-                }
-            });
-        }catch (Exception e){
-
-            temperatureData="0";
-        }
-
+////                            if (Float.parseFloat(cameraHandler.getInfo())<= 35)
+////                            if (Float.parseFloat(cameraHandler.getInfo()) < 35.4) {
+////                                Float me = Float.parseFloat(cameraHandler.getInfo()) + 1.5f;
+////                                temperatureData = String.valueOf(me);
+////                            } else if (Float.parseFloat(cameraHandler.getInfo()) <= 35.8 && Float.parseFloat(cameraHandler.getInfo()) >= 35) {
+////                                Float me = Float.parseFloat(cameraHandler.getInfo()) + 0.5f;
+////                                temperatureData = String.valueOf(me);
+////                            }
+//
+//
+//                        } else {
+////                            cameraHandler.setRectangle(null);
+////                            mybitmap=null;
+//                            temperatureData = "0";
+//                        }
+////                    dcimage.invalidate();
+////                    BitmapDrawable drawable = (BitmapDrawable) dcimage.getDrawable();
+////                    Bitmap bitmap = drawable.getBitmap();
+////                        Toast.makeText(MainActivity.this,String.valueOf(point.x)+""+point.y+" "+cameraHandler.getPoint()+":"+cameraHandler.getInfo(), Toast.LENGTH_LONG).show();
+//
+//                    } else {
+//                    Point point = null;
+//                    cameraHandler.setWidth_height(point);
+//                    mybitmap=null;
+//
+////                    dcimage.setImageBitmap(mybitmap);
+////                        cameraHandler.setRectangle(null);
+//                        temperatureData = "0";
+//
+//                    }
+//                }
+//            }).addOnFailureListener(new OnFailureListener() {
+//                @Override
+//                public void onFailure(@NonNull Exception e) {
+//                com.flir.thermalsdk.image.Point point = null;
+//                cameraHandler.setWidth_height(point);
+//                temperatureData="0";
+//                mybitmap=null;
+////                    cameraHandler.setRectangle(null);
+//
+//                }
+//            });
+//        }catch (Exception e){
+//
+//            temperatureData="0";
+//        }
+//        return temperatureData;
 
     }
-
-
 
 
     /**
@@ -491,6 +520,7 @@ public class MainActivity extends AppCompatActivity {
                     try{
                         Connect();
                     }catch (Exception e){
+                        Log.d(TAG,"NO Connect");
 
                     }
 
@@ -520,9 +550,27 @@ public class MainActivity extends AppCompatActivity {
 //        sdkVersionTextView.setText(sdkVersionText);
 //    }
 
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        stopService(new Intent(MainActivity.this,MyService.class));
+        return super.onTouchEvent(event);
+    }
+
     private TextView bottomBar;
 
     private void setupViews() {
+        tm=findViewById(R.id.temperatureText);
+        tm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this,test_home.class);
+                startActivity(i);
+                finish();
+            }
+        });
+
+
 //        descFlirOneStatus = findViewById(R.id.description);
 //        graphicOverlay = findViewById(R.id.graphic_overlay);
 //        msxImage = findViewById(R.id.msx_image);
@@ -547,6 +595,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
     public String stringFourDigits(String str) {
         return str.length() < 4 ? str : str.substring(0, 4);
     }
@@ -554,11 +603,6 @@ public class MainActivity extends AppCompatActivity {
     public  String stringTwoDigits(String str) {
         return str.length() < 2 ? str : str.substring(0, 2);
     }
-
-
-
-
-
 
 
 
