@@ -587,9 +587,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                               @Override
                               public void run() {
 
-
                                   onFacesDetected(currTimestamp, faces, addPending);
-
                                   addPending = false;
 
 
@@ -1299,6 +1297,11 @@ public void RegisterFaceFromFireBase() {
 //private ImageView im;
 public void GotoAddFace(View view){
     check=0;
+  take=0;
+  check=0;
+  temperatures.clear();
+  Noattendance=0;
+  prepare=0;
     fabAdd.setVisibility(View.VISIBLE);
     backButton.setVisibility(View.VISIBLE);
     bottomSheetLayout.setVisibility(View.INVISIBLE);
@@ -1353,7 +1356,7 @@ public HashMap<String,String> StoreAttendance(ArrayList<String> Id, ArrayList<St
         if (Float.parseFloat(tem)>=35){
 //          temperatures.remove(tem);
           temperature.add(Float.parseFloat(tem));
-          Toast.makeText(DetectorActivity.this,"hello",Toast.LENGTH_LONG).show();
+//          Toast.makeText(DetectorActivity.this,"hello",Toast.LENGTH_LONG).show();
         }
       }
 

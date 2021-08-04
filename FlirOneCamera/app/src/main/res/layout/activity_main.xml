@@ -32,8 +32,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="150dp"
-            android:layout_centerVertical="true"
+            android:layout_centerInParent="true"
+
             android:textSize="20dp"
             android:textColor="#2AD631"
             android:text="O"/>
@@ -42,8 +42,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="100dp"
-            android:layout_marginBottom="250dp"
-            android:textSize="80dp"
+            android:layout_marginBottom="400dp"
+            android:textSize="60dp"
             android:paddingRight="30dp"
             android:paddingLeft="30dp"
             android:text="Scan Here"
@@ -53,13 +53,12 @@
             android:id="@+id/temperatureText"
             />
 
-        <ImageView
+        <TextView
 
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
-            android:layout_width="500dp"
-            android:src="@drawable/face_shape"
-            android:layout_height="wrap_content"/>
+            android:background="@drawable/face_oval"
+            android:layout_centerInParent="true"
+            android:layout_width="300dp"
+            android:layout_height="400dp" />
 
 <!--        <TextView-->
 <!--            android:layout_width="wrap_content"-->

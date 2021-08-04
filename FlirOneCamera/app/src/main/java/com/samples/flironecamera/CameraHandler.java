@@ -282,6 +282,7 @@ class CameraHandler {
                 thermalImage.getFusion().setThermalFusionBelow(new ThermalValue(40, TemperatureUnit.CELSIUS));
 
                 Palette palette = PaletteManager.getDefaultPalettes().get(0);
+
                 thermalImage.setPalette(palette);
                 thermalImage.setTemperatureUnit(TemperatureUnit.CELSIUS);
                 ////////////////////////////
@@ -293,7 +294,7 @@ class CameraHandler {
 
                     try {
 
-                        Double dblSpotTemperature = thermalImage.getValueAt(new Point((thermalImage.getWidth() / 2)-(thermalImage.getWidth()/20), thermalImage.getHeight() / 50));
+                        Double dblSpotTemperature = thermalImage.getValueAt(new Point((thermalImage.getWidth() / 2)-(thermalImage.getWidth()/15), thermalImage.getHeight() / 30));
                         tempData=stringFourDigits(dblSpotTemperature);
                         Info=null;
                     }catch (Exception e){
