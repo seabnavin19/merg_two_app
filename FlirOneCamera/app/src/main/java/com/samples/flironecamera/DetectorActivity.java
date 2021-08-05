@@ -221,6 +221,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   int prepare=0;
   private HashMap<String,String> userIDFace= new HashMap<>();
 
+  //store all the face that already take within 5 min
+  private ArrayList<String> AlreadyTake= new ArrayList<>();
 
 
   @Override

@@ -181,7 +181,7 @@ public class MyService extends Service {
 
     }
 
-    private int running=0;
+
     private UsbPermissionHandler.UsbPermissionListener permissionListener = new UsbPermissionHandler.UsbPermissionListener() {
         @Override
         public void permissionGranted(Identity identity) {
