@@ -198,7 +198,7 @@ public class test_home extends AppCompatActivity{
             String datapassed = intent.getStringExtra("DATAPASSED");
             temperatureData=datapassed;
             temperatureText.setText(datapassed);
-            if (Float.parseFloat(datapassed)>=33 && k==0){
+            if (Float.parseFloat(datapassed)>29 && k==0){
                 k=1;
                 Intent i = new Intent(test_home.this,login.class);
                 startActivity(i);

@@ -566,7 +566,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     }
                     else {
   //                    temperatureData="35.2";
-                      if (Float.parseFloat(temperatureData)>=34){
+                      if (Float.parseFloat(temperatureData)>29){
                         if (Float.parseFloat(temperatureData)>=temporary){
                           temperatureText.setText(temperatureData+" °C");
                           temporary=Float.parseFloat(temperatureData);
@@ -1567,7 +1567,7 @@ public void Check(){
   Log.d("kkk",String.valueOf(AddedFace));
 
   // we need to have only one face inorder to generate the temperature
-  if (AddedFace>=1 && check==1 && temperatures.size()!=0){
+  if (AddedFace>=1 && check==1 && temperatures.size()>1){
     Allow_FaceDetect=false;
     AddedFace=0;
     ArrayList<String> FaceRepresent= new ArrayList<>(IdFace);

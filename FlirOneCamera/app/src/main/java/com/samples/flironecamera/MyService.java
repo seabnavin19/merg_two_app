@@ -336,7 +336,7 @@ w UI components
 
 //                Toast.makeText(MainActivity2.this,temperatureData,Toast.LENGTH_LONG).show();
 //                temperatureData=cameraHandler.getInfo();
-            if (Float.parseFloat(cameraHandler.getInfo())>=34){
+            if (Float.parseFloat(cameraHandler.getInfo())>29){
                 MyService.MyThread myThread = new MyService.MyThread();
                 myThread.start();
 
