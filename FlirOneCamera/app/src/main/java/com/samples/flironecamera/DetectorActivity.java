@@ -53,12 +53,19 @@ import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.gson.JsonObject;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
@@ -86,6 +93,10 @@ import com.samples.flironecamera.env.Logger;
 import com.samples.flironecamera.tflite.SimilarityClassifier;
 import com.samples.flironecamera.tflite.TFLiteObjectDetectionAPIModel;
 import com.samples.flironecamera.tracking.MultiBoxTracker;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -164,13 +175,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private ProgressDialog progressDialog;
   private HashSet<String> IdFace;
   private ArrayList<String> temperatures;
-  private Boolean Allow_FaceDetect=true;
-  private int AddedFace=0;
-  private  HashMap<String,String> resultMap;
-//  private  int Noface;
+  private Boolean Allow_FaceDetect = true;
+  private int AddedFace = 0;
+  private HashMap<String, String> resultMap;
+  //  private  int Noface;
   private String ID;
   private String currentuser;
-  public  int Attendance;
+  public int Attendance;
   private MediaPlayer mp;
   private MediaPlayer alert;
 //  private String temperatureData="0";
@@ -180,203 +191,207 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Button add_people;
 
 
-
   //per location
-  private  EditText location;
-  private String location_txt="three";
+  private EditText location;
+  private String location_txt = "three";
   private FirebaseFirestore db;
   private Object MutableLiveData;
 
-  private  Float temporary=0f;
+  private Float temporary = 0f;
 //  private TextView faceLocation;
 
 
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
   //use this variable to store all the id of people inorder to avoid adding duplicate people with the same id
-  private ArrayList<String> Ids= new ArrayList<>();
+  private ArrayList<String> Ids = new ArrayList<>();
 
   public String stringFourDigits(String str) {
     return str.length() < 4 ? str : str.substring(0, 4);
   }
 
-  public  String stringTwoDigits(String str) {
+  public String stringTwoDigits(String str) {
     return str.length() < 2 ? str : str.substring(0, 2);
   }
 
 
   //list of face fetch from database
-  private List<Map<String,Object>> AllFaceFromDataBase= new ArrayList<>();
+  private List<Map<String, Object>> AllFaceFromDataBase = new ArrayList<>();
   private Button addButton;
   private Spinner dropdown;
   private ArrayList<String> items;
   private TextView emailText;
 
-  private ArrayList<String> em= new ArrayList<>();
+  private ArrayList<String> em = new ArrayList<>();
 
 
-  int take=1;
-  int Noattendance=0;
-  int check=0;
-  int prepare=0;
-  private HashMap<String,String> userIDFace= new HashMap<>();
+  int take = 1;
+  int Noattendance = 0;
+  int check = 0;
+  int prepare = 0;
+  private HashMap<String, String> userIDFace = new HashMap<>();
 
   //store all the face that already take within 5 min
-  private ArrayList<String> AlreadyTake= new ArrayList<>();
+  private ArrayList<String> AlreadyTake = new ArrayList<>();
+
+
+  //to fetch face
+  private fetch_face fetch_faces;
 
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    try{
-    final Intent[] i = {getIntent()};
-    String email= i[0].getStringExtra("Email");
+    try {
+      final Intent[] i = {getIntent()};
+      String email = i[0].getStringExtra("Email");
 //    temperatureData="0";
 //    LoadFaceFromFirebase();
 
+
 //    faceLocation=findViewById(R.id.FaceText);
-    if (email.equals("No")){
-      Attendance=0;
-    }
-    else {
+      if (email.equals("No")) {
+        Attendance = 0;
+      } else {
 //      userIDFace.put("0","m");
 //      tracker.setIdname(userIDFace);
 
-      emailText=findViewById(R.id.showEmail);
-      emailText.setText(email);
-      currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        emailText = findViewById(R.id.showEmail);
+        emailText.setText(email);
+        currentuser = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-      items= new ArrayList<>();
-      dropdown=findViewById(R.id.spinner1);
-      db=FirebaseFirestore.getInstance();
-      db.collection(currentuser).document("Location").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-        @Override
-        public void onSuccess(DocumentSnapshot documentSnapshot) {
-          Map<String,Object> locationMap= documentSnapshot.getData();
-          if (documentSnapshot.exists()){
-
-            for (Map.Entry<String,Object> location_name:locationMap.entrySet()){
-              Map<String,Object> loc= (Map<String, Object>) location_name.getValue();
-              items.add(loc.get("Name").toString());
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
-
-            dropdown.setAdapter(adapter);
+        emailText.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            RegisterFaceFromFireBase();
           }
-          else {
-            String[] SpinnerArray= new String[]{"NoLocation"};
-
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, SpinnerArray);
+        });
 
 
-          }
+        items = new ArrayList<>();
+        dropdown = findViewById(R.id.spinner1);
+        db = FirebaseFirestore.getInstance();
+        db.collection(currentuser).document("Location").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+          @Override
+          public void onSuccess(DocumentSnapshot documentSnapshot) {
+            Map<String, Object> locationMap = documentSnapshot.getData();
+            if (documentSnapshot.exists()) {
+
+              for (Map.Entry<String, Object> location_name : locationMap.entrySet()) {
+                Map<String, Object> loc = (Map<String, Object>) location_name.getValue();
+                items.add(loc.get("Name").toString());
+              }
+              ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
+
+              dropdown.setAdapter(adapter);
+            } else {
+              String[] SpinnerArray = new String[]{"NoLocation"};
+
+              ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, SpinnerArray);
 
 
-        }
-      });
-      db.collection(currentuser).document("Email").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-        @Override
-        public void onSuccess(DocumentSnapshot documentSnapshot) {
-
-          if (documentSnapshot.exists()){
-
-            Map<String,Object> emails= documentSnapshot.getData();
-            for (Map.Entry<String,Object> user_name:emails.entrySet()){
-              Map<String,Object> mail= (Map<String, Object>) user_name.getValue();
-              em.add(mail.get("email").toString());
             }
 
-            successToast("Registered Face");
-          }
 
-        }
-      });
+          }
+        });
+        db.collection(currentuser).document("Email").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+          @Override
+          public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+            if (documentSnapshot.exists()) {
+
+              Map<String, Object> emails = documentSnapshot.getData();
+              for (Map.Entry<String, Object> user_name : emails.entrySet()) {
+                Map<String, Object> mail = (Map<String, Object>) user_name.getValue();
+                em.add(mail.get("email").toString());
+              }
+
+              successToast("Registered Face");
+            }
+
+          }
+        });
 //
 
 
-
-      dropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-          location_txt= dropdown.getSelectedItem().toString();
+        dropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+          @Override
+          public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            location_txt = dropdown.getSelectedItem().toString();
 //          successToast("mother");
-          RegisterFaceFromFireBase();
+            RegisterFaceFromFireBase();
 
-          Handler handler = new Handler();
-          handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-              check=1;
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+              @Override
+              public void run() {
+                check = 1;
               LoadFaceFromFirebase();
-              tracker.setIdname(userIDFace);
-            }
-          },2000);
+              successToast(String.valueOf(AllFaceFromDataBase.size()));
+                tracker.setIdname(userIDFace);
+              }
+            }, 5000);
 
-        }
+          }
 
-        @Override
-        public void onNothingSelected(AdapterView<?> parent) {
+          @Override
+          public void onNothingSelected(AdapterView<?> parent) {
 //          LoadFaceFromFirebase();
 
-        }
-      });
+          }
+        });
 
-      Attendance=1;
-      Log.d("user",currentuser);
-    }
-    mp=MediaPlayer.create(this,R.raw.temprature_checked);
-    alert=MediaPlayer.create(this,R.raw.high);
-    fabAdd = findViewById(R.id.fab_add);
-    connectButton=findViewById(R.id.connect_to_flir);
-    disconnectButton=findViewById(R.id.disconnect_flir);
-    backButton=findViewById(R.id.ChangeAttendance);
-    attendance=findViewById(R.id.text_attendance);
-    add_people=findViewById(R.id.GotoAddFace);
+        Attendance = 1;
+        Log.d("user", currentuser);
+      }
+      mp = MediaPlayer.create(this, R.raw.temprature_checked);
+      alert = MediaPlayer.create(this, R.raw.high);
+      fabAdd = findViewById(R.id.fab_add);
+      connectButton = findViewById(R.id.connect_to_flir);
+      disconnectButton = findViewById(R.id.disconnect_flir);
+      backButton = findViewById(R.id.ChangeAttendance);
+      attendance = findViewById(R.id.text_attendance);
+      add_people = findViewById(R.id.GotoAddFace);
 
-    //
+      //
 //    location= findViewById(R.id.location);
 
 
-
-    if (Attendance==0){
-      add_people.setVisibility(View.INVISIBLE);
-      attendance.setVisibility(View.INVISIBLE);
-    }
-    IdFace= new HashSet<>();
-    temperatures= new ArrayList<>();
-    fabAdd.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        onAddClick();
+      if (Attendance == 0) {
+        add_people.setVisibility(View.INVISIBLE);
+        attendance.setVisibility(View.INVISIBLE);
       }
-    });
+      IdFace = new HashSet<>();
+      temperatures = new ArrayList<>();
+      fabAdd.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          onAddClick();
+        }
+      });
 
-    // Real-time contour detection of multiple faces
-    FaceDetectorOptions options =
-            new FaceDetectorOptions.Builder()
-                    .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-                    .setContourMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-                    .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-                    .build();
+      // Real-time contour detection of multiple faces
+      FaceDetectorOptions options =
+              new FaceDetectorOptions.Builder()
+                      .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                      .setContourMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+                      .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+                      .build();
 
-    FaceDetector detector = FaceDetection.getClient(options);
+      FaceDetector detector = FaceDetection.getClient(options);
 
-    faceDetector = detector;
-    }catch (Exception e){
-      Log.d("ex",e.toString());
+      faceDetector = detector;
+    } catch (Exception e) {
+      Log.d("ex", e.toString());
     }
-
 
 
     //checkWritePermission();
 
 
-
   }
-
-
-
 
 
   private void onAddClick() {
@@ -440,8 +455,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     if (sensorOrientation == 90 || sensorOrientation == 270) {
       targetH = previewWidth;
       targetW = previewHeight;
-    }
-    else {
+    } else {
       targetW = previewWidth;
       targetH = previewHeight;
     }
@@ -476,7 +490,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     sensorOrientation, MAINTAIN_ASPECT);
 
 
-
     trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
     trackingOverlay.addCallback(
             new DrawCallback() {
@@ -492,116 +505,107 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     tracker.setFrameConfiguration(previewWidth, previewHeight, sensorOrientation);
   }
 
-  int detect=0;
+  int detect = 0;
+
   @Override
   protected void processImage() {
 //    if (connectedIdentity==null){
 //      Connect();
 //    }
 
-      ++timestamp;
-      final long currTimestamp = timestamp;
-      trackingOverlay.postInvalidate();
+    ++timestamp;
+    final long currTimestamp = timestamp;
+    trackingOverlay.postInvalidate();
 
 
-      // No mutex needed as this method is not reentrant.
-      if (computingDetection) {
-        readyForNextImage();
-        return;
-      }
-      computingDetection = true;
+    // No mutex needed as this method is not reentrant.
+    if (computingDetection) {
+      readyForNextImage();
+      return;
+    }
+    computingDetection = true;
 
-      LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
+    LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
 
-      rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
+    rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
 
-        readyForNextImage();
-
-
-
-      final Canvas canvas = new Canvas(croppedBitmap);
-      canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
-      // For examining the actual TF input.
-      if (SAVE_PREVIEW_BITMAP) {
-        ImageUtils.saveBitmap(croppedBitmap);
-      }
-      Log.i("temmm",temperatureData);
+    readyForNextImage();
 
 
+    final Canvas canvas = new Canvas(croppedBitmap);
+    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+    // For examining the actual TF input.
+    if (SAVE_PREVIEW_BITMAP) {
+      ImageUtils.saveBitmap(croppedBitmap);
+    }
+    Log.i("temmm", temperatureData);
 
 
+    InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
 
 
-      InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
+    faceDetector
+            .process(image)
+            .addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+              @Override
+              public void onSuccess(List<Face> faces) {
+                if (faces.size() == 0) {
+                  updateResults(currTimestamp, new LinkedList<>());
+                  temperatureText.setText("");
+                  Noface += 1;
+                  IdFace.clear();
+                  temperatures.clear();
+                  temperatureData = "0";
+                  temporary = 0f;
 
+                  // 500 equal to 1 minute
 
-      faceDetector
-              .process(image)
-              .addOnSuccessListener(new OnSuccessListener<List<Face>>() {
-                @Override
-                public void onSuccess(List<Face> faces) {
-                  if (faces.size() == 0) {
-                      updateResults(currTimestamp, new LinkedList<>());
-                      temperatureText.setText("");
-                      Noface+=1;
-                      IdFace.clear();
-                      temperatures.clear();
-                      temperatureData="0";
-                      temporary=0f;
-
-                      // 500 equal to 1 minute
-
-                      if(Noface>=500*15 && k==0){
+                  if (Noface >= 500 * 15 && k == 0) {
 //                        Intent i = new Intent(DetectorActivity.this,test_home.class);
 //                        startActivity(i);
 //                        stop();
 //                        finish();
-                        k=1;
+                    k = 1;
 
-                        gotoHome();
-
-
-                      }
-
-                      return;
-
-                    }
-                    else {
-  //                    temperatureData="35.2";
-                      if (Float.parseFloat(temperatureData)>29){
-                        if (Float.parseFloat(temperatureData)>=temporary){
-                          temperatureText.setText(temperatureData+" °C");
-                          temporary=Float.parseFloat(temperatureData);
-                        }
-                        else {
-                          temperatureText.setText(String.valueOf(temporary)+" °C");
-                        }
-                      }
-
-                      else {
-                        temperatureText.setText("");
-                      }
+                    gotoHome();
 
 
-                    }
-                    runInBackground(
-                            new Runnable() {
-                              @Override
-                              public void run() {
-
-                                  onFacesDetected(currTimestamp, faces, addPending);
-                                  addPending = false;
-
-
-
-
-                              }
-                            });
                   }
 
-                });
-      }
-  int k=0;
+                  return;
+
+                } else {
+                  //                    temperatureData="35.2";
+                  if (Float.parseFloat(temperatureData) > 29) {
+                    if (Float.parseFloat(temperatureData) >= temporary) {
+                      temperatureText.setText(temperatureData + " °C");
+                      temporary = Float.parseFloat(temperatureData);
+                    } else {
+                      temperatureText.setText(String.valueOf(temporary) + " °C");
+                    }
+                  } else {
+                    temperatureText.setText("");
+                  }
+
+
+                }
+                runInBackground(
+                        new Runnable() {
+                          @Override
+                          public void run() {
+
+                            onFacesDetected(currTimestamp, faces, addPending);
+                            addPending = false;
+
+
+                          }
+                        });
+              }
+
+            });
+  }
+
+  int k = 0;
 
   @Override
   protected int getLayoutId() {
@@ -678,12 +682,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     ImageView ivFace = dialogLayout.findViewById(R.id.dlg_image);
     TextView tvTitle = dialogLayout.findViewById(R.id.dlg_title);
     EditText etName = dialogLayout.findViewById(R.id.dlg_input);
-    EditText id= dialogLayout.findViewById(R.id.id_input);
+    EditText id = dialogLayout.findViewById(R.id.id_input);
 
     tvTitle.setText("Add Face");
     rec.setColor(1);
     ivFace.setImageBitmap(rec.getCrop());
-    NewPerson=rec;
+    NewPerson = rec;
     etName.setHint("Enter name");
     id.setHint("Enter Id");
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -693,30 +697,30 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       }
     });
 
-    builder.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dlg, int i) {
-          String name = etName.getText().toString();
-          String ID_i= id.getText().toString();
+        String name = etName.getText().toString();
+        String ID_i = id.getText().toString();
 //          detector.register(name,rec);
-          NameFromFirebase=name;
-          ID=id.getText().toString();
+        NameFromFirebase = name;
+        ID = id.getText().toString();
 
-          if (name.isEmpty() || ID_i.isEmpty()) {
-              return;
-          }
+        if (name.isEmpty() || ID_i.isEmpty()) {
+          return;
+        }
 
-        ArrayList<Float> n= new ArrayList<>();
-        String string_n="";
-        HashMap<String,Object> user= new HashMap<>();
-        user.put("Id",rec.getId());
-        user.put("Distance",rec.getDistance());
-        user.put("Title",rec.getTitle());
-        user.put("Name",name);
-        user.put("ID",ID_i);
-        user.put("Extra",rec.getExtra().toString());
+        ArrayList<Float> n = new ArrayList<>();
+        String string_n = "";
+        HashMap<String, Object> user = new HashMap<>();
+        user.put("Id", rec.getId());
+        user.put("Distance", rec.getDistance());
+        user.put("Title", rec.getTitle());
+        user.put("Name", name);
+        user.put("ID", ID_i);
+        user.put("Extra", rec.getExtra().toString());
 
-        int p=0;
+        int p = 0;
 //        for (float[] arr :rec.getExtra()){
 //          for (float j : arr){
 //            n.add(j);
@@ -726,15 +730,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //        }
 
 
-        userIDFace.put(ID_i,name);
+        userIDFace.put(ID_i, name);
 //        AllFaceFromDataBase.add(user);
 //        Log.d("faceees",rec.getExtra())
-          builder.setCancelable(false);
-          progressDialog= new ProgressDialog(DetectorActivity.this);
-          progressDialog.setMessage("Uploading Image To DataBase..!");
-          progressDialog.show();
-          AddNewFace();
-          dlg.dismiss();
+        builder.setCancelable(false);
+        progressDialog = new ProgressDialog(DetectorActivity.this);
+        progressDialog.setMessage("Uploading Image To DataBase..!");
+        progressDialog.show();
+        AddNewFace();
+        dlg.dismiss();
       }
     });
     builder.setView(dialogLayout);
@@ -743,6 +747,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
   }
+
   private void updateResults(long currTimestamp, final List<SimilarityClassifier.Recognition> mappedRecognitions) {
 
     tracker.trackResults(mappedRecognitions, currTimestamp);
@@ -751,12 +756,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     //adding = false;
 
     if (mappedRecognitions.size() > 0) {
-       LOGGER.i("Adding results");
-       SimilarityClassifier.Recognition rec = mappedRecognitions.get(0);
-       if (rec.getExtra() != null) {
-         showAddFaceDialog(rec);
+      LOGGER.i("Adding results");
+      SimilarityClassifier.Recognition rec = mappedRecognitions.get(0);
+      if (rec.getExtra() != null) {
+        showAddFaceDialog(rec);
 //         framText.setText(rec.getCrop().getClass().getName().toString());
-       }
+      }
 
     }
 
@@ -780,18 +785,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     updateResults(0, new LinkedList<>());
     temperatureText.setText("");
-    Noface+=1;
+    Noface += 1;
     IdFace.clear();
     temperatures.clear();
-    temperatureData="0";
-    temporary=0f;
+    temperatureData = "0";
+    temporary = 0f;
     final Handler handler = new Handler();
     handler.postDelayed(new Runnable() {
       @Override
       public void run() {
         // Do something after 5s = 5000ms
         LoadFaceFromFirebase();
-        check=1;
+        check = 1;
         tracker.setIdname(userIDFace);
 
       }
@@ -805,12 +810,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     super.onResume();
 //    updateResults(currTime, facees);;
   }
+
   long currTime;
   List<SimilarityClassifier.Recognition> facees;
 
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
 //    detectFace();
-    if (Float.parseFloat(temperatureData)>=30) {
+    if (Float.parseFloat(temperatureData) >= 0) {
       cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
       final Canvas canvas = new Canvas(cropCopyBitmap);
       final Paint paint = new Paint();
@@ -1016,16 +1022,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       updateResults(currTimestamp, mappedRecognitions);
 
-    }
-    else {
+    } else {
       updateResults(0, new LinkedList<>());
-      temperatureData="0";
+      temperatureData = "0";
     }
 
   }
+
   private ImageView testImage;
 
-//  public static byte[] getBytes(Bitmap bitmap) {
+  //  public static byte[] getBytes(Bitmap bitmap) {
 //    ByteArrayOutputStream stream = new ByteArrayOutputStream();
 //    bitmap.compress(Bitmap.CompressFormat.PNG, 0, stream);
 //    return stream.toByteArray();
@@ -1036,27 +1042,27 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //    Bitmap bitmap = BitmapFactory.decodeByteArray(bytedata, 0, bytedata.length);
 //    return bitmap;
 //  }
-  public void addFaceToFireBase (View view){
+  public void addFaceToFireBase(View view) {
 
     AddNewFace();
   }
 
   //Dialog for user to decide to have attendance checking or not
-  public void AskingDialog(){
+  public void AskingDialog() {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     LayoutInflater inflater = getLayoutInflater();
     View dialogLayout = inflater.inflate(R.layout.askingoption, null);
-    TextView asktitle= dialogLayout.findViewById(R.id.ask_title);
+    TextView asktitle = dialogLayout.findViewById(R.id.ask_title);
 
     builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
-        check=1;
+        check = 1;
         LoadFaceFromFirebase();
 
 //        ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
         tracker.setIdname(userIDFace);
-        Log.d("tracker",userIDFace.toString());
+        Log.d("tracker", userIDFace.toString());
 //
 //        dropdown.setAdapter(adapter);
       }
@@ -1068,7 +1074,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     builder.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
-        check=1;
+        check = 1;
 
       }
     });
@@ -1077,9 +1083,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
 
-
-  public void FetchAllFaceFromFirebase(View view){
-    check=1;
+  public void FetchAllFaceFromFirebase(View view) {
+    check = 1;
     LoadFaceFromFirebase();
 
 //        ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
@@ -1088,72 +1093,76 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
 
-  public void LoadFaceFromFirebase(){
+  public void LoadFaceFromFirebase() {
     Ids.clear();
-    for (Map<String, Object> document : AllFaceFromDataBase){
-      Log.d("string_face",document.get("Extra").toString());
-      float[][] Extra= new float[1][];
+    for (Map<String, Object> document : AllFaceFromDataBase) {
+      Log.d("string_face", document.get("Extra").toString());
+      float[][] Extra = new float[1][];
 //      Toast.makeText(DetectorActivity.this,String.valueOf(AllFaceFromDataBase),Toast.LENGTH_LONG).show();
-      float Distance= Float.parseFloat(String.valueOf(document.get("Distance")));
-      String[] string_face= (String[]) document.get("Extra");
+      float Distance = Float.parseFloat(String.valueOf(document.get("Distance")));
+      float[] string_face = (float[]) document.get("Extra");
 //      ArrayList<Float> ArrayListExtra= (ArrayList<Float>) document.get("Extra");
-      Log.d("faceeees",String.valueOf(string_face[0]));
+      Log.d("faceeees", String.valueOf(string_face[0]));
 
-      float[] arr0= new float[string_face.length];
-      int i=0;
-      String Name=document.get("ID").toString();
+      float[] arr0 = new float[string_face.length];
+      int i = 0;
+      String Name = document.get("ID").toString();
 //      Ids.clear();
       Ids.add(Name);
 
 
-      for (int k=0;k<string_face.length;k++){
-        arr0[k]= Float.parseFloat(String.valueOf(string_face[k]));
+      for (int k = 0; k < string_face.length; k++) {
+
+        arr0[k] = Float.parseFloat(String.valueOf(string_face[k]));
+
+
       }
-      Extra[0]=arr0;
-      Log.d("faceeees",String.valueOf(arr0[0]));
-      SimilarityClassifier.Recognition Newface= new SimilarityClassifier.Recognition(document.get("Id").toString(),document.get("Title").toString(),Distance,new RectF());
+      Extra[0] = arr0;
+      Log.d("faceeees", Name);
+      SimilarityClassifier.Recognition Newface = new SimilarityClassifier.Recognition(document.get("Id").toString(), document.get("Title").toString(), Distance, new RectF());
       Newface.setExtra(Extra);
-      detector.register(Name,Newface);
+      detector.register(Name, Newface);
 
     }
-    Toast.makeText(DetectorActivity.this,"Sucess register",Toast.LENGTH_LONG).show();
-    Log.d("Ids",Ids.toString());
+    Toast.makeText(DetectorActivity.this, "Sucess register", Toast.LENGTH_LONG).show();
+    Log.d("Ids", Ids.toString());
   }
 
   // to send face to firebase if the id is not duplicate
-  public Map<String, Object> SendData(){
-    FirebaseFirestore db= FirebaseFirestore.getInstance();
+  public Map<String, Object> SendData() {
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
     Map<String, Object> user = new HashMap<>();
-    String string_n="";
+    String string_n = "";
 //    ArrayList<String> n= new ArrayList<>();
-    user.put("Title",NewPerson.getTitle().toString());
-    user.put("Id",NewPerson.getId());
-    user.put("Distance",NewPerson.getDistance());;
-    user.put("Name",NameFromFirebase);
+    user.put("Title", NewPerson.getTitle().toString());
+    user.put("Id", NewPerson.getId());
+    user.put("Distance", NewPerson.getDistance());
+    ;
+    user.put("Name", NameFromFirebase);
     //    user.put("Image",NewPerson.getCrop());
-    user.put("ID",ID);
+    user.put("ID", ID);
 
     //    user.put("crop", Blob.fromBytes(getBytes(navin.gebbbbbbbbbbbbbbbhgggggggtCrop())));
-    int p=0;
-    float[][] n= NewPerson.getExtra();
+    int p = 0;
+    float[][] n = NewPerson.getExtra();
 
-    float[] n1= n[0];
-    string_n+=n1[0];
-    for(int i=1;i<=n1.length-1;i++){
-      string_n+=","+String.valueOf(n1[i]);
+    float[] n1 = n[0];
+    string_n += n1[0];
+    for (int i = 1; i <= n1.length - 1; i++) {
+      string_n += "," + String.valueOf(n1[i]);
 //      Log.d("faceeees",String.valueOf(n1[i]));
     }
 
 
 //      Log.d("faceeees",String.valueOf(Float.parseFloat("-3.4075818E-4")-1));
-      user.put("Extra",string_n.toString().split(","));
+    user.put("Extra", string_n.toString().split(","));
 //      Toast.makeText(DetectorActivity.this,n.toString().substring(1,-1),Toast.LENGTH_LONG).show();
     AllFaceFromDataBase.add(user);
-      p+=1;
+    p += 1;
 
 //    location_txt= dropdown.getSelectedItem().toString();
-    People_Face people_face = new People_Face(NewPerson.getId(),NameFromFirebase,NewPerson.getDistance(),string_n.substring(1,string_n.length()-1),NewPerson.getTitle());
-    db.collection(currentuser).document("Face").update(ID,people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
+    People_Face people_face = new People_Face(NewPerson.getId(), NameFromFirebase, NewPerson.getDistance(), string_n.substring(1, string_n.length() - 1), NewPerson.getTitle());
+    db.collection(currentuser).document("Face").update(ID, people_face).addOnSuccessListener(new OnSuccessListener<Void>() {
       @Override
       public void onSuccess(Void aVoid) {
         progressDialog.dismiss();
@@ -1163,74 +1172,131 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     return user;
   }
 
-  public void AddNewFace(){
-    if (!Ids.contains(ID)){
-     SendData();
-    }
-    else {
+  public void AddNewFace() {
+    if (!Ids.contains(ID)) {
+      SendData();
+    } else {
       progressDialog.dismiss();
-      AlertDialog.Builder builder= new AlertDialog.Builder(this);
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
       builder.setMessage("This ID already Contain in Database Do you want to Update?");
       builder.setCancelable(false)
-      .setNegativeButton("No", new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
+              .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
 
-        }
-      })
-      .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-          progressDialog.show();
-          SendData();
-        }
-      });
+                }
+              })
+              .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                  progressDialog.show();
+                  SendData();
+                }
+              });
       builder.show();
     }
 
   }
 
+  private RequestQueue mQueue;
 
-public void RegisterFaceFromFireBase() {
-  FirebaseFirestore db = FirebaseFirestore.getInstance();
-  List<Map<String, Object>> usersReplace = new ArrayList<>();
-  db.collection(currentuser).document("Face").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-    @Override
-    public void onSuccess(DocumentSnapshot documentSnapshot) {
-      Map<String, Object> map = documentSnapshot.getData();
-      String[] mm;
-      if (map != null) {
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-          HashMap<String,Object> user= new HashMap<>();
-          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
-          user.put("Id",by_key.get("id"));
-          user.put("Distance",by_key.get("distance"));
-          user.put("Title",by_key.get("title"));
-          mm=by_key.get("face").toString().split(",");
-//          Log.d("faceees",mm.toString());
-          user.put("Extra",by_key.get("face").toString().split(","));
-          user.put("Name",by_key.get("name"));
-          user.put("ID",entry.getKey());
-          usersReplace.add(user);
-          userIDFace.put(entry.getKey(),by_key.get("name").toString());
-//          successToast(user.get("ID").toString());
+  public void RegisterFaceFromFireBase() {
+//  FirebaseFirestore db = FirebaseFirestore.getInstance();
+    List<Map<String, Object>> usersReplace = new ArrayList<>();
+//  db.collection(currentuser).document("Face").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+//    @Override
+//    public void onSuccess(DocumentSnapshot documentSnapshot) {
+//      Map<String, Object> map = documentSnapshot.getData();
+//      String[] mm;
+//      if (map != null) {
+//        for (Map.Entry<String, Object> entry : map.entrySet()) {
+//          HashMap<String,Object> user= new HashMap<>();
+//          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
+//          user.put("Id",by_key.get("id"));
+//          user.put("Distance",by_key.get("distance"));
+//          user.put("Title",by_key.get("title"));
+//          mm=by_key.get("face").toString().split(",");
+////          Log.d("faceees",mm.toString());
+//          user.put("Extra",by_key.get("face").toString().split(","));
+//          user.put("Name",by_key.get("name"));
+//          user.put("ID",entry.getKey());
+//          usersReplace.add(user);
+//          userIDFace.put(entry.getKey(),by_key.get("name").toString());
+////          successToast(user.get("ID").toString());
+//
+//        }
+//        AllFaceFromDataBase=usersReplace;
+//
+//
+//      }
+//      else {
+//        AllFaceFromDataBase= new ArrayList<>();
+//
+//      }
+//
+////      Toast.makeText(DetectorActivity.this,mm,Toast.LENGTH_LONG).show();
+//
+//
+//
+//    }
+//  });
 
+
+    //fetch from api
+    mQueue = Volley.newRequestQueue(DetectorActivity.this);
+    String url = "https://intech-api.herokuapp.com/api/v1/upload_data/faces/?fbclid=IwAR2YR1OE6Uiq8N5cV5k5M4aNLJfAu-K4UT4iUW3xOdPBcjR-WYXHfdIOVuw";
+    JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+      @Override
+      public void onResponse(JSONArray response) {
+        try {
+
+          for (int i = 0; i <response.length(); i++){
+            HashMap<String,Object> user= new HashMap<>();
+            float [] face= new float[512];
+            JSONObject jsonObject = response.getJSONObject(i);
+            String name = jsonObject.getString("name");
+            String id = jsonObject.getString("userid");
+
+            for (int j=0;j<512;j++){
+              face[j]= (float) jsonObject.getDouble("f"+(j+1));
+            }
+            successToast(face.toString());
+            Double distance = jsonObject.getDouble("distance");
+            user.put("Id",id);
+            user.put("Distance",-1);
+            user.put("Title","");
+//          mm=by_key.get("face").toString().split(",");
+////          Log.d("faceees",mm.toString());
+            user.put("Extra",face);
+            user.put("Name",name);
+            user.put("ID",String.valueOf(i));
+            userIDFace.put(user.get("ID").toString(),user.get("Name").toString());
+            usersReplace.add(user);
+          }
+
+
+          AllFaceFromDataBase=usersReplace;
+
+//          people_face_array student = new people_face_array("0", name, 1, , "");
+//          Toast.makeText(DetectorActivity.this, "" + id, Toast.LENGTH_LONG).show();
+
+        } catch (JSONException e) {
+          e.printStackTrace();
+          Toast.makeText(DetectorActivity.this, "men", Toast.LENGTH_LONG).show();
         }
-        AllFaceFromDataBase=usersReplace;
-
-
-      }
-      else {
-        AllFaceFromDataBase= new ArrayList<>();
-
       }
 
-//      Toast.makeText(DetectorActivity.this,mm,Toast.LENGTH_LONG).show();
+    }, new Response.ErrorListener() {
+      @Override
+      public void onErrorResponse(VolleyError error) {
+
+      }
+    });
+
+    mQueue.add(request);
 
 
 
-    }
-  });
 
 //  db.collection(currentuser).document("Face1").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
 //    @Override
@@ -1291,6 +1357,7 @@ public void RegisterFaceFromFireBase() {
 //
 //    }
 //  });
+
 
 
 

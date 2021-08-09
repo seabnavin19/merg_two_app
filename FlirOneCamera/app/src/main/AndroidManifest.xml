@@ -27,57 +27,58 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".test_home"
+        <activity
+            android:name=".test_home"
             android:noHistory="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
 
-            <meta-data
-                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
-                android:resource="@xml/device_filter" />
+<!--            <meta-data-->
+<!--                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"-->
+<!--                android:resource="@xml/device_filter" />-->
         </activity>
         <activity android:name=".change_pass" />
         <activity
-            android:noHistory="true"
-            android:name=".login">
+            android:name=".login"
+            android:noHistory="true">
 
-<!--             <intent-filter>-->
-<!--             <action android:name="android.intent.action.MAIN" />-->
-<!--             <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
-
-
-<!--             <category android:name="android.intent.category.LAUNCHER" />-->
-<!--             </intent-filter>-->
+             <intent-filter>
+             <action android:name="android.intent.action.MAIN" />
+             <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 
 
-<!--             <meta-data-->
-<!--             android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"-->
-<!--             android:resource="@xml/device_filter" />-->
+             <category android:name="android.intent.category.LAUNCHER" />
+             </intent-filter>
+
+
+             <meta-data
+             android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+             android:resource="@xml/device_filter" />
         </activity>
         <activity
-            android:noHistory="true"
-            android:name=".MainActivity">
+            android:name=".MainActivity"
+            android:noHistory="true">
 
-<!--             <intent-filter>-->
-<!--             <action android:name="android.intent.action.MAIN" />-->
-<!--             <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
-
-
-<!--             <category android:name="android.intent.category.LAUNCHER" />-->
-<!--             </intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+            <!-- <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" /> -->
 
 
-<!--             <meta-data-->
-<!--             android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"-->
-<!--             android:resource="@xml/device_filter" />-->
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
+
+
+            <!-- <meta-data -->
+            <!-- android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" -->
+            <!-- android:resource="@xml/device_filter" /> -->
         </activity>
         <activity
-            android:noHistory="true"
             android:name=".DetectorActivity"
+            android:noHistory="true"
             android:screenOrientation="portrait">
 
             <!-- <intent-filter> -->
