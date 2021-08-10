@@ -1223,98 +1223,98 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private RequestQueue mQueue;
 
   public void RegisterFaceFromFireBase() {
-//  FirebaseFirestore db = FirebaseFirestore.getInstance();
-    List<Map<String, Object>> usersReplace = new ArrayList<>();
-//  db.collection(currentuser).document("Face").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-//    @Override
-//    public void onSuccess(DocumentSnapshot documentSnapshot) {
-//      Map<String, Object> map = documentSnapshot.getData();
-//      String[] mm;
-//      if (map != null) {
-//        for (Map.Entry<String, Object> entry : map.entrySet()) {
-//          HashMap<String,Object> user= new HashMap<>();
-//          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
-//          user.put("Id",by_key.get("id"));
-//          user.put("Distance",by_key.get("distance"));
-//          user.put("Title",by_key.get("title"));
-//          mm=by_key.get("face").toString().split(",");
-////          Log.d("faceees",mm.toString());
-//          user.put("Extra",by_key.get("face").toString().split(","));
-//          user.put("Name",by_key.get("name"));
-//          user.put("ID",entry.getKey());
-//          usersReplace.add(user);
-//          userIDFace.put(entry.getKey(),by_key.get("name").toString());
-////          successToast(user.get("ID").toString());
-//
-//        }
-//        AllFaceFromDataBase=usersReplace;
-//
-//
-//      }
-//      else {
-//        AllFaceFromDataBase= new ArrayList<>();
-//
-//      }
-//
-////      Toast.makeText(DetectorActivity.this,mm,Toast.LENGTH_LONG).show();
-//
-//
-//
-//    }
-//  });
+  FirebaseFirestore db = FirebaseFirestore.getInstance();
+  List<Map<String, Object>> usersReplace = new ArrayList<>();
+  db.collection(currentuser).document("Face").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+    @Override
+    public void onSuccess(DocumentSnapshot documentSnapshot) {
+      Map<String, Object> map = documentSnapshot.getData();
+      String[] mm;
+      if (map != null) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+          HashMap<String,Object> user= new HashMap<>();
+          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
+          user.put("Id",by_key.get("id"));
+          user.put("Distance",by_key.get("distance"));
+          user.put("Title",by_key.get("title"));
+          mm=by_key.get("face").toString().split(",");
+//          Log.d("faceees",mm.toString());
+          user.put("Extra",by_key.get("face").toString().split(","));
+          user.put("Name",by_key.get("name"));
+          user.put("ID",entry.getKey());
+          usersReplace.add(user);
+          userIDFace.put(entry.getKey(),by_key.get("name").toString());
+//          successToast(user.get("ID").toString());
+
+        }
+        AllFaceFromDataBase=usersReplace;
+
+
+      }
+      else {
+        AllFaceFromDataBase= new ArrayList<>();
+
+      }
+
+//      Toast.makeText(DetectorActivity.this,mm,Toast.LENGTH_LONG).show();
+
+
+
+    }
+  });
 
 
     //fetch from api
-    mQueue = Volley.newRequestQueue(DetectorActivity.this);
-    String url = "https://intech-attendance-api.herokuapp.com/api/v1/upload_data/faces/?fbclid=IwAR3Wzlj5lizXnaXLaZ5r2-X0VG0Kjfd7aJPKTcH98qeHTGZM6RvICnivU-o";
-    JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
-      @Override
-      public void onResponse(JSONArray response) {
-        try {
-
-          for (int i = 0; i <response.length(); i++){
-            HashMap<String,Object> user= new HashMap<>();
-//            float [] face= new float[512];
-            JSONObject jsonObject = response.getJSONObject(i);
-            String name = jsonObject.getString("name");
-            String id = jsonObject.getString("userid");
-
-            String [] face= jsonObject.getString("f").split(",");
-            successToast(face[0]);
-
-            Double distance = jsonObject.getDouble("distance");
-            user.put("Id",id);
-            user.put("Distance",-1);
-            user.put("Title","");
-//          mm=by_key.get("face").toString().split(",");
-////          Log.d("faceees",mm.toString());
-            user.put("Extra",face);
-            user.put("Name",name);
-            user.put("ID",String.valueOf(i));
-            userIDFace.put(user.get("ID").toString(),user.get("Name").toString());
-            usersReplace.add(user);
-          }
-
-
-          AllFaceFromDataBase=usersReplace;
-
-//          people_face_array student = new people_face_array("0", name, 1, , "");
-//          Toast.makeText(DetectorActivity.this, "" + id, Toast.LENGTH_LONG).show();
-
-        } catch (JSONException e) {
-          e.printStackTrace();
-          Toast.makeText(DetectorActivity.this, "men", Toast.LENGTH_LONG).show();
-        }
-      }
-
-    }, new Response.ErrorListener() {
-      @Override
-      public void onErrorResponse(VolleyError error) {
-
-      }
-    });
-
-    mQueue.add(request);
+//    mQueue = Volley.newRequestQueue(DetectorActivity.this);
+//    String url = "https://intech-attendance-api.herokuapp.com/api/v1/upload_data/faces/?fbclid=IwAR3Wzlj5lizXnaXLaZ5r2-X0VG0Kjfd7aJPKTcH98qeHTGZM6RvICnivU-o";
+//    JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+//      @Override
+//      public void onResponse(JSONArray response) {
+//        try {
+//
+//          for (int i = 0; i <response.length(); i++){
+//            HashMap<String,Object> user= new HashMap<>();
+////            float [] face= new float[512];
+//            JSONObject jsonObject = response.getJSONObject(i);
+//            String name = jsonObject.getString("name");
+//            String id = jsonObject.getString("userid");
+//
+//            String [] face= jsonObject.getString("f").split(",");
+//            successToast(face[0]);
+//
+//            Double distance = jsonObject.getDouble("distance");
+//            user.put("Id",id);
+//            user.put("Distance",-1);
+//            user.put("Title","");
+////          mm=by_key.get("face").toString().split(",");
+//////          Log.d("faceees",mm.toString());
+//            user.put("Extra",face);
+//            user.put("Name",name);
+//            user.put("ID",String.valueOf(i));
+//            userIDFace.put(user.get("ID").toString(),user.get("Name").toString());
+//            usersReplace.add(user);
+//          }
+//
+//
+//          AllFaceFromDataBase=usersReplace;
+//
+////          people_face_array student = new people_face_array("0", name, 1, , "");
+////          Toast.makeText(DetectorActivity.this, "" + id, Toast.LENGTH_LONG).show();
+//
+//        } catch (JSONException e) {
+//          e.printStackTrace();
+//          Toast.makeText(DetectorActivity.this, "men", Toast.LENGTH_LONG).show();
+//        }
+//      }
+//
+//    }, new Response.ErrorListener() {
+//      @Override
+//      public void onErrorResponse(VolleyError error) {
+//
+//      }
+//    });
+//
+//    mQueue.add(request);
 
 
 
