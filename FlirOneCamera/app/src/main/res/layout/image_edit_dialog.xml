@@ -29,23 +29,23 @@
         android:id="@+id/id_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:hint="Enter Id "
+        tools:hint="Enter Email"
         android:padding="15dp"
         android:paddingLeft="20dp"
         android:layout_marginTop="10dp"
         />
 
-    <EditText
-        android:padding="15dp"
-        android:paddingLeft="20dp"
-        android:layout_marginTop="10dp"
-        android:layout_gravity="center"
-        android:background="@drawable/input_name"
-        android:id="@+id/dlg_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:hint="The dialog hint"
-        />
+<!--    <EditText-->
+<!--        android:padding="15dp"-->
+<!--        android:paddingLeft="20dp"-->
+<!--        android:layout_marginTop="10dp"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:background="@drawable/input_name"-->
+<!--        android:id="@+id/dlg_input"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        tools:hint="The dialog hint"-->
+<!--        />-->
 
 
 </LinearLayout>

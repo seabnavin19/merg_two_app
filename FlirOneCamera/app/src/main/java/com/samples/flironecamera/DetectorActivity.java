@@ -681,15 +681,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     View dialogLayout = inflater.inflate(R.layout.image_edit_dialog, null);
     ImageView ivFace = dialogLayout.findViewById(R.id.dlg_image);
     TextView tvTitle = dialogLayout.findViewById(R.id.dlg_title);
-    EditText etName = dialogLayout.findViewById(R.id.dlg_input);
+//    EditText etName = dialogLayout.findViewById(R.id.dlg_input);
     EditText id = dialogLayout.findViewById(R.id.id_input);
 
     tvTitle.setText("Add Face");
     rec.setColor(1);
     ivFace.setImageBitmap(rec.getCrop());
     NewPerson = rec;
-    etName.setHint("Enter name");
-    id.setHint("Enter Id");
+//    etName.setHint("Enter name");
+    id.setHint("Enter Email Address");
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
@@ -700,13 +700,19 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dlg, int i) {
-        String name = etName.getText().toString();
-        String ID_i = id.getText().toString();
+        String name;
+        String email = id.getText().toString();
+        if (email.isEmpty()){
+          return;
+        }
+        email=email.replaceAll("\\.","");
+        name=getNameFromEmail(email);
 //          detector.register(name,rec);
+        successToast(email);
         NameFromFirebase = name;
-        ID = id.getText().toString();
+        ID = email;
 
-        if (name.isEmpty() || ID_i.isEmpty()) {
+        if (name.isEmpty() || email.isEmpty()) {
           return;
         }
 
@@ -716,9 +722,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         user.put("Id", rec.getId());
         user.put("Distance", rec.getDistance());
         user.put("Title", rec.getTitle());
+
+
+        //need to change to email
         user.put("Name", name);
-        user.put("ID", ID_i);
+        user.put("ID", email);
         user.put("Extra", rec.getExtra().toString());
+        successToast(name);
 
         int p = 0;
 //        for (float[] arr :rec.getExtra()){
@@ -730,7 +740,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //        }
 
 
-        userIDFace.put(ID_i, name);
+        userIDFace.put(email, name);
 //        AllFaceFromDataBase.add(user);
 //        Log.d("faceees",rec.getExtra())
         builder.setCancelable(false);
@@ -745,6 +755,17 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     builder.setCancelable(false);
     builder.show();
 
+
+  }
+
+
+
+
+  private String  getNameFromEmail(String email){
+    String leftPart = email.substring(0,email.indexOf("@"));
+
+
+    return leftPart;
 
   }
 
@@ -1095,22 +1116,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   public void LoadFaceFromFirebase() {
     Ids.clear();
+//    successToast(AllFaceFromDataBase.size()+"");
     for (Map<String, Object> document : AllFaceFromDataBase) {
       Log.d("string_face", document.get("Extra").toString());
       float[][] Extra = new float[1][];
 //      Toast.makeText(DetectorActivity.this,String.valueOf(AllFaceFromDataBase),Toast.LENGTH_LONG).show();
       float Distance = Float.parseFloat(String.valueOf(document.get("Distance")));
-      float[] string_face = (float[]) document.get("Extra");
+      String[] string_face = (String[]) document.get("Extra");
 //      ArrayList<Float> ArrayListExtra= (ArrayList<Float>) document.get("Extra");
-      Log.d("faceeees", String.valueOf(string_face[0]));
+//      Log.d("faceeees", String.valueOf(string_face[0]));
 
+      successToast("load:"+string_face[0]);
       float[] arr0 = new float[string_face.length];
       int i = 0;
       String Name = document.get("ID").toString();
 //      Ids.clear();
       Ids.add(Name);
-
-
       for (int k = 0; k < string_face.length; k++) {
 
         arr0[k] = Float.parseFloat(String.valueOf(string_face[k]));
@@ -1178,12 +1199,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     } else {
       progressDialog.dismiss();
       AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
       builder.setMessage("This ID already Contain in Database Do you want to Update?");
+
       builder.setCancelable(false)
               .setNegativeButton("No", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-
                 }
               })
               .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -1244,7 +1266,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     //fetch from api
     mQueue = Volley.newRequestQueue(DetectorActivity.this);
-    String url = "https://intech-api.herokuapp.com/api/v1/upload_data/faces/?fbclid=IwAR2YR1OE6Uiq8N5cV5k5M4aNLJfAu-K4UT4iUW3xOdPBcjR-WYXHfdIOVuw";
+    String url = "https://intech-attendance-api.herokuapp.com/api/v1/upload_data/faces/?fbclid=IwAR3Wzlj5lizXnaXLaZ5r2-X0VG0Kjfd7aJPKTcH98qeHTGZM6RvICnivU-o";
     JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
       @Override
       public void onResponse(JSONArray response) {
@@ -1252,15 +1274,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
           for (int i = 0; i <response.length(); i++){
             HashMap<String,Object> user= new HashMap<>();
-            float [] face= new float[512];
+//            float [] face= new float[512];
             JSONObject jsonObject = response.getJSONObject(i);
             String name = jsonObject.getString("name");
             String id = jsonObject.getString("userid");
 
-            for (int j=0;j<512;j++){
-              face[j]= (float) jsonObject.getDouble("f"+(j+1));
-            }
-            successToast(face.toString());
+            String [] face= jsonObject.getString("f").split(",");
+            successToast(face[0]);
+
             Double distance = jsonObject.getDouble("distance");
             user.put("Id",id);
             user.put("Distance",-1);
