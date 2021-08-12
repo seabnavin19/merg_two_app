@@ -239,13 +239,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private fetch_face fetch_faces;
 
 
-  private FirebaseAuth auth;
+//  private FirebaseAuth auth;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     try {
 //      final Intent[] i = {getIntent()};
-      String email = auth.getCurrentUser().getEmail();
+      String email="User";
+      if (currentuser!=null){
+      email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+      }
 //    temperatureData="0";
 //    LoadFaceFromFirebase();
 
@@ -312,6 +315,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
           }
         });
+        emailText.setText(email);
 //
 
 

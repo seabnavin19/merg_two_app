@@ -200,7 +200,7 @@ public class test_home extends AppCompatActivity{
             temperatureText.setText(datapassed);
             if (Float.parseFloat(datapassed)>29 && k==0){
                 k=1;
-                Intent i = new Intent(test_home.this,login.class);
+                Intent i = new Intent(test_home.this,DetectorActivity.class);
                 startActivity(i);
                 stop();
                 finish();
