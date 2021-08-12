@@ -65,7 +65,7 @@ public class login extends AppCompatActivity {
         FirebaseUser currentuser= auth.getCurrentUser();
         if (currentuser!=null){
             String emailCurrent= currentuser.getEmail();
-            Intent i = new Intent(login.this,DetectorActivity.class);
+            Intent i = new Intent(login.this,test_home.class);
             i.putExtra("Email",emailCurrent);
             startActivity(i);
             finish();
@@ -83,7 +83,7 @@ public class login extends AppCompatActivity {
         without_acc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(login.this,DetectorActivity.class);
+                Intent i = new Intent(login.this,test_home.class);
                 i.putExtra("Email","No");
                 startActivity(i);
                 finish();

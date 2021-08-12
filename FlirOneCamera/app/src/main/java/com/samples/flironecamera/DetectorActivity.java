@@ -239,20 +239,19 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private fetch_face fetch_faces;
 
 
+  private FirebaseAuth auth;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     try {
-      final Intent[] i = {getIntent()};
-      String email = i[0].getStringExtra("Email");
+//      final Intent[] i = {getIntent()};
+      String email = auth.getCurrentUser().getEmail();
 //    temperatureData="0";
 //    LoadFaceFromFirebase();
 
 
 //    faceLocation=findViewById(R.id.FaceText);
-      if (email.equals("No")) {
-        Attendance = 0;
-      } else {
+
 //      userIDFace.put("0","m");
 //      tracker.setIdname(userIDFace);
 
@@ -329,7 +328,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               public void run() {
                 check = 1;
               LoadFaceFromFirebase();
-              successToast(String.valueOf(AllFaceFromDataBase.size()));
+//              successToast(String.valueOf(AllFaceFromDataBase.size()));
                 tracker.setIdname(userIDFace);
               }
             }, 5000);
@@ -345,7 +344,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         Attendance = 1;
         Log.d("user", currentuser);
-      }
+
       mp = MediaPlayer.create(this, R.raw.temprature_checked);
       alert = MediaPlayer.create(this, R.raw.high);
       fabAdd = findViewById(R.id.fab_add);
@@ -708,7 +707,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         email=email.replaceAll("\\.","");
         name=getNameFromEmail(email);
 //          detector.register(name,rec);
-        successToast(email);
+//        successToast(email);
         NameFromFirebase = name;
         ID = email;
 
@@ -728,7 +727,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         user.put("Name", name);
         user.put("ID", email);
         user.put("Extra", rec.getExtra().toString());
-        successToast(name);
+//        successToast(name);
 
         int p = 0;
 //        for (float[] arr :rec.getExtra()){
@@ -990,14 +989,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 Check();
 
-                Log.d("MyFace", String.valueOf(AddedFace));
+//                Log.d("MyFace", String.valueOf(AddedFace));
 
               } else {
                 color = Color.RED;
               }
             } else {
               prepare += 1;
-              Log.d("kkkk", "pre" + String.valueOf(prepare));
+//              Log.d("kkkk", "pre" + String.valueOf(prepare));
               if (prepare >= 5) {
                 Noattendance = 1;
                 prepare = 0;
@@ -1083,7 +1082,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 //        ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, items);
         tracker.setIdname(userIDFace);
-        Log.d("tracker", userIDFace.toString());
+//        Log.d("tracker", userIDFace.toString());
 //
 //        dropdown.setAdapter(adapter);
       }
@@ -1118,7 +1117,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     Ids.clear();
 //    successToast(AllFaceFromDataBase.size()+"");
     for (Map<String, Object> document : AllFaceFromDataBase) {
-      Log.d("string_face", document.get("Extra").toString());
+//      Log.d("string_face", document.get("Extra").toString());
       float[][] Extra = new float[1][];
 //      Toast.makeText(DetectorActivity.this,String.valueOf(AllFaceFromDataBase),Toast.LENGTH_LONG).show();
       float Distance = Float.parseFloat(String.valueOf(document.get("Distance")));
@@ -1126,7 +1125,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //      ArrayList<Float> ArrayListExtra= (ArrayList<Float>) document.get("Extra");
 //      Log.d("faceeees", String.valueOf(string_face[0]));
 
-      successToast("load:"+string_face[0]);
+
       float[] arr0 = new float[string_face.length];
       int i = 0;
       String Name = document.get("ID").toString();
@@ -1139,14 +1138,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       }
       Extra[0] = arr0;
-      Log.d("faceeees", Name);
+//      Log.d("faceeees", Name);
       SimilarityClassifier.Recognition Newface = new SimilarityClassifier.Recognition(document.get("Id").toString(), document.get("Title").toString(), Distance, new RectF());
       Newface.setExtra(Extra);
       detector.register(Name, Newface);
 
     }
     Toast.makeText(DetectorActivity.this, "Sucess register", Toast.LENGTH_LONG).show();
-    Log.d("Ids", Ids.toString());
+//    Log.d("Ids", Ids.toString());
   }
 
   // to send face to firebase if the id is not duplicate
