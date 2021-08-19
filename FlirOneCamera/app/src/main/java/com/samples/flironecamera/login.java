@@ -59,24 +59,31 @@ public class login extends AppCompatActivity {
         auth=FirebaseAuth.getInstance();
         email=findViewById(R.id.email);
         password=findViewById(R.id.pass);
+
         progressDialog= new ProgressDialog(login.this);
+
         login_button=findViewById(R.id.login_but);
         without_acc=findViewById(R.id.no_acc);
+
         FirebaseUser currentuser= auth.getCurrentUser();
         if (currentuser!=null){
+
             String emailCurrent= currentuser.getEmail();
             Intent i = new Intent(login.this,test_home.class);
             i.putExtra("Email",emailCurrent);
             startActivity(i);
             finish();
         }
+
         login_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String txt_email= email.getText().toString();
                 String txt_pass=password.getText().toString();
+
                 progressDialog.setMessage("Login....");
                 progressDialog.show();
+
                 loginUser(txt_email,txt_pass);
             }
         });
@@ -103,9 +110,11 @@ public class login extends AppCompatActivity {
             Toast.makeText(login.this,"Fail",Toast.LENGTH_LONG).show();
         }
         else {
+
             auth.signInWithEmailAndPassword(email,pass).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                 @Override
                 public void onSuccess(AuthResult authResult) {
+
                     Toast.makeText(login.this,"Success",Toast.LENGTH_LONG).show();
                     Intent i = new Intent(login.this,DetectorActivity.class);
                     i.putExtra("Email",email);
@@ -117,6 +126,7 @@ public class login extends AppCompatActivity {
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
+
                     progressDialog.dismiss();
                     Alert_Fail();
                     Toast.makeText(login.this,"Fail",Toast.LENGTH_LONG).show();
@@ -129,6 +139,7 @@ public class login extends AppCompatActivity {
 
     }
     private void Alert_Fail(){
+
         AlertDialog.Builder builder = new AlertDialog.Builder(login.this);
         builder.setTitle("Fail to login!");
 

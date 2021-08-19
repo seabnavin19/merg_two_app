@@ -20,6 +20,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Trace;
+import android.util.Log;
 import android.util.Pair;
 
 import java.io.BufferedReader;
@@ -248,6 +249,7 @@ public class TFLiteObjectDetectionAPIModel
 
     embeedings = new float[1][OUTPUT_SIZE];
     outputMap.put(0, embeedings);
+    Log.d("embeeding_test",String.valueOf(inputArray[0]));
 
 
     // Run the inference call.
@@ -258,7 +260,7 @@ public class TFLiteObjectDetectionAPIModel
 
 //    String res = "[";
 //    for (int i = 0; i < embeedings[0].length; i++) {
-//      res += embeedings[0][i];
+//      res += embeedings[0][i]
 //      if (i < embeedings[0].length - 1) res += ", ";
 //    }
 //    res += "]";

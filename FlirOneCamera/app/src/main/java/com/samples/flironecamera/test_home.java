@@ -38,38 +38,20 @@ public class test_home extends AppCompatActivity{
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_test_home);
 //        temp=findViewById(R.id.temperature_test);
+
         temperatureText=findViewById(R.id.temperatureText);
         temperatureText.setTextSize(50);
-//        temperatureText=findViewById(R.id.temperatureText_test);
         permissionHandler = new PermissionHandler(showMessage, test_home.this);
+//        temperatureText=findViewById(R.id.temperatureText_test);
+
         startService(new Intent(test_home.this,MyService.class));
-//        temp.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-////                Message msg = Message.obtain(null, MyService.MSG_SAY_HELLO, 0, 0);
-////                try {
-////                    mService.send(msg);
-////                    Log.v(TAG, "Message sent.");
-////                } catch ( RemoteException e) {
-////                    e.printStackTrace();
-////                }
-//
-//                Intent i = new Intent(test_home.this,login.class);
-//                startActivity(i);
-//                stop();
-//                finish();
-//
-//
-////                Intent u = new Intent(test_home.this,MainActivity.class);
-//////        u.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-////        startActivity(u);
-////                stopService(new Intent(test_home.this,MyService.class));
-//            }
-//        });
-//        why();
+
     }
 
-    private MainActivity.ShowMessage showMessage = message -> Toast.makeText(test_home.this, message, Toast.LENGTH_SHORT).show();
+    private MainActivity.ShowMessage showMessage =
+            message -> Toast.makeText(test_home.this, message, Toast.LENGTH_SHORT).show();
+
+
     public void stop(){
         stopService(new Intent(test_home.this,MyService.class));
         if (mBound) {
@@ -94,6 +76,7 @@ public class test_home extends AppCompatActivity{
 //        IntentFilter intentFilter = new IntentFilter();
 //        intentFilter.addAction(MyService2.MY_ACTION);
 //        registerReceiver(myReceiver, intentFilter);
+
         myReceiver = new test_home.MyReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MyService.MY_ACTION);
@@ -103,6 +86,7 @@ public class test_home extends AppCompatActivity{
 //        Intent i = new Intent(test_home.this,
 //                MyService.class);
 //        startService(i);
+
         super.onStart();
         // Bind to LocalService
         Intent intent = new Intent(test_home.this, MyService.class);
@@ -112,6 +96,7 @@ public class test_home extends AppCompatActivity{
     @Override
     public void onStop() {
 //        unregisterReceiver(myReceiver);
+
         super.onStop();
         // Unbind from the service
         unregisterReceiver(myReceiver);
@@ -214,7 +199,9 @@ public class test_home extends AppCompatActivity{
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+
         Message msg = Message.obtain(null, MyService.MSG_SAY_HELLO, 0, 0);
+
         try {
                     mService.send(msg);
 

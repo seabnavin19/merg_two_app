@@ -17,6 +17,8 @@ public class Present_student {
     public Present_student() {}
 
     public Present_student(String ID, String Name, String Status, String Temperature,String Date, String Location, String Time) {
+
+
         this.Name=Name;
         this.ID=ID;
         this.Status=Status;
