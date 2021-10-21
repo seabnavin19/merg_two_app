@@ -387,7 +387,8 @@ public class MainActivity extends AppCompatActivity {
 
                 FrameDataHolder poll = framesBuffer.poll();
                 assert poll != null;
-//                msxImage.setImageBitmap(poll.msxatatemperatureData = stringFourDigits(cameraHandler.getLogData());
+
+//                msxImage.setImageBitmap(poll.msxatatemperatureData = stringFourDigits(cameraHandler.getLogData()og);
 //                Toast.makeText(MainActivity.this,temperatureData,Toast.LENGTH_LONG).show();
 //                mybitmap=poll.dcBitmap;
 

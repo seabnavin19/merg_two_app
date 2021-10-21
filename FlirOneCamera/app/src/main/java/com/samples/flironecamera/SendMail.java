@@ -76,6 +76,7 @@ public class SendMail extends AsyncTask{
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
+
         if (messages!=null){
 
             try {

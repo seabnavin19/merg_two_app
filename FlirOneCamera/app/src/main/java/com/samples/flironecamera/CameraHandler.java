@@ -294,6 +294,7 @@ class CameraHandler {
 
                     try {
 
+
                         Double dblSpotTemperature = thermalImage.getValueAt(new Point((thermalImage.getWidth() / 2)-(thermalImage.getWidth()/15), thermalImage.getHeight() / 30));
                         dblSpotTemperature=Math.max( dblSpotTemperature,thermalImage.getValueAt(new Point((thermalImage.getWidth() / 2), thermalImage.getHeight() / 30)));
                         dblSpotTemperature=Math.max( dblSpotTemperature,thermalImage.getValueAt(new Point((thermalImage.getWidth() / 2), thermalImage.getHeight() /2)));

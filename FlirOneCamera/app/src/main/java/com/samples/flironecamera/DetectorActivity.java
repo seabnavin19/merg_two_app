@@ -320,7 +320,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             location_txt = dropdown.getSelectedItem().toString();
 //          successToast("mother");
-            RegisterFaceFromFireBase();
+//            RegisterFaceFromFireBase();
+            Fetch_Detail_From_Api();
 
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
@@ -328,10 +329,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               public void run() {
                 check = 1;
                 LoadFaceFromFirebase();
-//              successToast(String.valueOf(AllFaceFromDataBase.size()));
+              successToast(String.valueOf(AllFaceFromDataBase.size()));
                 tracker.setIdname(userIDFace);
               }
-            }, 5000);
+            }, 6000);
 
           }
 
@@ -559,7 +560,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   temporary = 0f;
 
                   // 500 equal to 1 minute
-                  // go to home page after no face detected after 15 min
+                  // go to home page after no face detected  15 min
                   if (Noface >= 500 * 15 && k == 0) {
 
                     k = 1;
@@ -567,7 +568,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   }
                   return;
 
-                } else {
+                }
+
+                else {
 
                   if (Float.parseFloat(temperatureData) > 29) {
 
@@ -1166,7 +1169,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //    Log.d("Ids", Ids.toString());
   }
 
-
   public String ChangeFaceArrayToStringArray(float[][] Array_face){
 
     String string_face="";
@@ -1256,6 +1258,69 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
   private RequestQueue mQueue;
+  public void Fetch_Detail_From_Api(){
+
+    List<Map<String, Object>> usersReplace = new ArrayList<>();
+
+
+    //fetch from api
+    mQueue = Volley.newRequestQueue(DetectorActivity.this);
+    String url = "https://intech-attendance-api.herokuapp.com/api/v1/upload_data/faces/?fbclid=IwAR3Wzlj5lizXnaXLaZ5r2-X0VG0Kjfd7aJPKTcH98qeHTGZM6RvICnivU-o";
+    JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+      @Override
+      public void onResponse(JSONArray response) {
+        try {
+
+          for (int i = 0; i <response.length(); i++){
+            HashMap<String,Object> user= new HashMap<>();
+//            float [] face= new float[512];
+            JSONObject jsonObject = response.getJSONObject(i);
+            String name = jsonObject.getString("name");
+            String id = jsonObject.getString("userid");
+
+            String [] face= jsonObject.getString("f").split(",");
+//            successToast(face[0]);
+
+            Double distance = jsonObject.getDouble("distance");
+
+            user.put("Id",id);
+            user.put("Distance",-1);
+            user.put("Title","");
+            user.put("Extra",face);
+            user.put("Name",name);
+            user.put("ID",String.valueOf(i));
+
+            userIDFace.put(user.get("ID").toString(),user.get("Name").toString());
+            usersReplace.add(user);
+          }
+
+
+          AllFaceFromDataBase=usersReplace;
+
+//          people_face_array student = new people_face_array("0", name, 1, , "");
+//          Toast.makeText(DetectorActivity.this, "" + id, Toast.LENGTH_LONG).show();
+
+        } catch (JSONException e) {
+          e.printStackTrace();
+          Toast.makeText(DetectorActivity.this, "men", Toast.LENGTH_LONG).show();
+        }
+      }
+
+    }, new Response.ErrorListener() {
+      @Override
+      public void onErrorResponse(VolleyError error) {
+
+      }
+    });
+
+    mQueue.add(request);
+  }
+
+
+
+
+
+
 
   public void RegisterFaceFromFireBase() {
   FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -1300,126 +1365,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
   });
 
-
-    //fetch from api
-//    mQueue = Volley.newRequestQueue(DetectorActivity.this);
-//    String url = "https://intech-attendance-api.herokuapp.com/api/v1/upload_data/faces/?fbclid=IwAR3Wzlj5lizXnaXLaZ5r2-X0VG0Kjfd7aJPKTcH98qeHTGZM6RvICnivU-o";
-//    JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
-//      @Override
-//      public void onResponse(JSONArray response) {
-//        try {
-//
-//          for (int i = 0; i <response.length(); i++){
-//            HashMap<String,Object> user= new HashMap<>();
-////            float [] face= new float[512];
-//            JSONObject jsonObject = response.getJSONObject(i);
-//            String name = jsonObject.getString("name");
-//            String id = jsonObject.getString("userid");
-//
-//            String [] face= jsonObject.getString("f").split(",");
-//            successToast(face[0]);
-//
-//            Double distance = jsonObject.getDouble("distance");
-//            user.put("Id",id);
-//            user.put("Distance",-1);
-//            user.put("Title","");
-////          mm=by_key.get("face").toString().split(",");
-//////          Log.d("faceees",mm.toString());
-//            user.put("Extra",face);
-//            user.put("Name",name);
-//            user.put("ID",String.valueOf(i));
-//            userIDFace.put(user.get("ID").toString(),user.get("Name").toString());
-//            usersReplace.add(user);
-//          }
-//
-//
-//          AllFaceFromDataBase=usersReplace;
-//
-////          people_face_array student = new people_face_array("0", name, 1, , "");
-////          Toast.makeText(DetectorActivity.this, "" + id, Toast.LENGTH_LONG).show();
-//
-//        } catch (JSONException e) {
-//          e.printStackTrace();
-//          Toast.makeText(DetectorActivity.this, "men", Toast.LENGTH_LONG).show();
-//        }
-//      }
-//
-//    }, new Response.ErrorListener() {
-//      @Override
-//      public void onErrorResponse(VolleyError error) {
-//
-//      }
-//    });
-//
-//    mQueue.add(request);
-
-
-
-
-//  db.collection(currentuser).document("Face1").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-//    @Override
-//    public void onSuccess(DocumentSnapshot documentSnapshot) {
-//      Map<String, Object> map = documentSnapshot.getData();r
-//
-//      if (map != null) {
-//        for (Map.Entry<String, Object> entry : map.entrySet()) {
-//          HashMap<String,Object> user= new HashMap<>();
-//          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
-//          user.put("Id",by_key.get("id"));
-//          user.put("Distance",by_key.get("distance"));
-//          user.put("Title",by_key.get("title"));
-//          user.put("Extra",by_key.get("face"));
-//          user.put("Name",by_key.get("name"));
-//          user.put("ID",entry.getKey());
-//          usersReplace.add(user);
-//          userIDFace.put(entry.getKey(),by_key.get("name").toString());
-////          successToast(user.get("ID").toString());
-//
-//        }
-//        AllFaceFromDataBase=usersReplace;
-//
-//      }
-//
-//
-//
-//
-//    }
-//  });
-
-//  db.collection(currentuser).document("Face2").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-//    @Override
-//    public void onSuccess(DocumentSnapshot documentSnapshot) {
-//      Map<String, Object> map = documentSnapshot.getData();
-//
-//      if (map != null) {
-//        for (Map.Entry<String, Object> entry : map.entrySet()) {
-//          HashMap<String,Object> user= new HashMap<>();
-//          Map<String,Object> by_key= (Map<String, Object>) entry.getValue();
-//          user.put("Id",by_key.get("id"));
-//          user.put("Distance",by_key.get("distance"));
-//          user.put("Title",by_key.get("title"));
-//          user.put("Extra",by_key.get("face"));
-//          user.put("Name",by_key.get("name"));
-//          user.put("ID",entry.getKey());
-//          usersReplace.add(user);
-//          userIDFace.put(entry.getKey(),by_key.get("name").toString());
-////          successToast(user.get("ID").toString());
-//
-//        }
-//        AllFaceFromDataBase=usersReplace;
-//
-//      }
-//
-//
-//
-//
-//    }
-//  });
-
-
-
-
 }
+
+
 
 //private ImageView im;
 public void GotoAddFace(View view){
