@@ -30,34 +30,34 @@
         <activity
             android:name=".test_home"
             android:noHistory="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
 
-            <meta-data
-                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
-                android:resource="@xml/device_filter" />
+<!--            <meta-data-->
+<!--                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"-->
+<!--                android:resource="@xml/device_filter" />-->
         </activity>
         <activity android:name=".change_pass" />
         <activity
             android:name=".login"
             android:noHistory="true">
 
-<!--             <intent-filter>-->
-<!--             <action android:name="android.intent.action.MAIN" />-->
-<!--             <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
+             <intent-filter>
+             <action android:name="android.intent.action.MAIN" />
+             <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 
 
-<!--             <category android:name="android.intent.category.LAUNCHER" />-->
-<!--             </intent-filter>-->
+             <category android:name="android.intent.category.LAUNCHER" />
+             </intent-filter>
 
 
-<!--             <meta-data-->
-<!--             android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"-->
-<!--             android:resource="@xml/device_filter" />-->
+             <meta-data
+             android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+             android:resource="@xml/device_filter" />
         </activity>
         <activity
             android:name=".MainActivity"

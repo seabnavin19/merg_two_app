@@ -121,6 +121,7 @@ public String temperatureData="000";
   protected int previewHeight = 0;
   private boolean debug = false;
   private Handler handler;
+  private CameraHandler cameraHandler;
   private HandlerThread handlerThread;
   private boolean useCamera2API;
   private boolean isProcessingFrame = false;
@@ -255,7 +256,34 @@ public String temperatureData="000";
 //            }
 
 
+      public void SendData() {
+        Map<String, Object> user = new HashMap<>();
+        float[][] n = NewPerson.getExtra();
 
+        String string_n = ChangeFaceArrayToStringArray(n);
+
+        // check and change for new api
+        user.put("name", NameFromFirebase);
+        user.put("email", ID);
+        user.put("faceString", string_n.toString().split(","));
+
+
+        AllFaceFromDataBase.add(user);
+
+        String name = NameFromFirebase;
+        String email = ID;
+        String faceString = string_n.substring(1, string_n.length() - 1);
+
+
+        Map<String, String> data = new HashMap<>();
+        data.put("name", name);
+        data.put("email", email);
+        data.put("faceString", faceString);
+
+        ApiClient apiClient = new ApiClient(getApplicationContext());
+        apiClient.sendData(data);
+        progressDialog.dismiss();
+    }
 
         }
     }
